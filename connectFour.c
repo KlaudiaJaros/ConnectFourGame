@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 
 
 struct Player {
@@ -101,9 +102,6 @@ void gameHistory() {
     printf(" Game History: \n");
 }
 
-void singlePlayer() {
-    printf(" Single Player Game: \n");
-}
 
 int movesLeft(char* board) {
     int len = 42;
@@ -343,19 +341,21 @@ char checkWin(char* board) {
     return '-';
 }
 
-// takeTurnMultiplayer method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
+// takeTurn method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
 // returns: 0 if the move is valid and saved, 1 if the move is invalid
 // params: char *board - playing board, char token - user's token (X or O), int column - the column to where the move is being made
-int takeTurnMultiplayer(char* board, char token, int column)
+int takeTurn(char* board, char token, int column, int computerTurn)
 {
     int invalidMove = 0;
     if (column > 7 || column < 1)
     {
         invalidMove = 1;
-        printf("\n No such column. Please choose a different one.\n");
+        // if it is not a computer turn, display information for the player:
+        if(!computerTurn)
+            printf("\n No such column. Please choose a different one.\n");
         return invalidMove;
     }
-    printf(" Move for: %c, column: %d\n", token, column);
+    printf(" Move: placed token %c into column %d\n", token, column);
     int offset = column - 1;
 
     // starting from the bottom of the first column
@@ -375,25 +375,116 @@ int takeTurnMultiplayer(char* board, char token, int column)
         }
     }
 
-    // if no space left in the chosen column:
-    if (invalidMove)
+    // if no space left in the chosen column and if it is not a computer turn:
+    if (invalidMove && !computerTurn)
         printf("\n This column is full. Please choose a different one.\n");
 
     return invalidMove;
 }
 
-// multiplayer method - logic behind multiplayer game
-void multiplayer() {
 
-    printf(" Multiplayer game: \n\n");
 
-    // define players:
-    struct Player player_1, player_2;
+void game(struct Player *player_1, struct Player *player_2, int singleplayer) {
+    // create the board and initialise it:
+    char* board;
+    board = initBoard();
+    /*struct Board boardStruct;
+    boardStruct.board=board;
+
+    char *col1[6];
+    populateColumns(col1, board);
+    for (int i=0; i<6; i++){
+      printf(" %c ", *col1[i]);
+    }*/
 
     // create pointers to next, previous and temporary player:
     struct Player* next_player;
     struct Player* previous_player;
     struct Player* tmp_player;
+
+    // set the next and previous players:
+    next_player = player_1;
+    previous_player = player_2;
+    tmp_player = player_2;
+
+    printBoard(board);
+
+    // while not game over:
+    int gameOver = 0;
+    while (!gameOver) {
+
+        // get the next player choice:
+        int userChoice = 0;
+        printf(" Your turn %s. ", next_player->name);
+        int invalidMove = 1;
+
+        if (singleplayer==1 && !strcmp(next_player->name, "Computer")) {
+            while (invalidMove) {
+                srand(time(0));
+                int randNumber = rand() % 7;
+                printf("\n");
+                invalidMove = takeTurn(board, next_player->token, randNumber,1);
+            }
+        }
+        else {
+            printf("Type in the column number: ");
+            int validInput = scanf("%d", &userChoice);
+
+            // validate user's input:
+            while (validInput != 1) {
+                int temp;
+                while ((temp = getchar()) != EOF && temp != '\n');
+                printf("\n Incorrect input. Please choose a valid column: ");
+                validInput = scanf("%d", &userChoice);
+            }
+            invalidMove = takeTurn(board, next_player->token, userChoice,0);
+        }
+
+        // if the move is valid, swap players:
+        if (!invalidMove)
+        {
+            tmp_player = next_player;
+            next_player = previous_player;
+            previous_player = tmp_player;
+        }
+
+        printBoard(board);
+
+        // check if there are any moves left:
+        char win = checkWin(board);
+        int moves = movesLeft(board);
+
+        // if there is no winner and moves left:
+        if (win == '-' && moves) {
+            gameOver = 0;
+        }
+        // if the winner is X:
+        else if (win == 'X') {
+            gameOver = 1;
+            printf(" Player %s wins!", player_1->name);
+        }
+        // if the winner is O:
+        else if (win == 'O') {
+            gameOver = 1;
+            printf(" Player %s wins!", player_2->name);
+        }
+        // if there are no moves left:
+        else if (moves == 0) {
+            gameOver = 1;
+            printf(" It's a draw!");
+        }
+    }
+
+    printf("\n");
+}
+
+// multiplayer method - logic behind multiplayer game
+void multiplayer() {
+
+    printf("\n Multiplayer game: \n\n");
+
+    // define players:
+    struct Player player_1, player_2;
 
     // allocate space for players' names:
     char* p_1 = (char*)malloc(sizeof(char) * 20);
@@ -417,81 +508,38 @@ void multiplayer() {
     player_2.winner = 0;
     player_2.token = 'O';
 
-    // create the board and initialise it:
-    char* board;
-    board = initBoard();
-    /*struct Board boardStruct;
-    boardStruct.board=board;
+    game(&player_1, &player_2, 0);
 
-    char *col1[6];
-    populateColumns(col1, board);
-    for (int i=0; i<6; i++){
-      printf(" %c ", *col1[i]);
-    }*/
+}
 
-    // set the next and previous players:
-    next_player = &player_1;
-    previous_player = &player_2;
-    tmp_player = &player_2;
+void singlePlayer() {
 
-    printBoard(board);
+    printf("\n Singleplayer game: \n\n");
 
-    // while not game over:
-    int gameOver = 0;
-    while (!gameOver) {
+    // define players:
+    struct Player player_1, player_2;
 
-        // get the user choice:
-        int userChoice = 0;
-        printf(" Your turn %s. Type in the column number: ", next_player->name);
-        int validInput = scanf("%d", &userChoice);
+    // allocate space for players' names:
+    char* p_1 = (char*)malloc(sizeof(char) * 20);
 
-        // validate user's input:
-        while (validInput != 1) {
-            int temp;
-            while ((temp = getchar()) != EOF && temp != '\n');
-            printf("\n Incorrect input. Please choose a valid column: ");
-            validInput = scanf("%d", &userChoice);
-        }
+    // ask for users' names:
 
-        int invalidMove = 0;
-        invalidMove = takeTurnMultiplayer(board, next_player->token, userChoice);
+    printf(" Player 1 name (max 20 char): ");
+    scanf("%s", p_1);
 
-        // if the move is valid, swap players:
-        if (!invalidMove)
-        {
-            tmp_player = next_player;
-            next_player = previous_player;
-            previous_player = tmp_player;
-        }
+    // initialise player 1:
+    player_1.name = p_1;
+    player_1.winner = 0;
+    player_1.token = 'X';
 
-        printBoard(board);
+    // initialise player 2:
+    char computerName[9] = "Computer";
+    player_2.name = &computerName[0];
+    player_2.winner = 0;
+    player_2.token = 'O';
 
-        // check if there are any moves left:
-        char win = checkWin(board);
-        int moves = movesLeft(board);
+    game(&player_1, &player_2, 1);
 
-        // if there is no winner and moves left:
-        if (win == '-' && moves) {
-            gameOver = 0;
-        }
-        // if the winner is X:
-        else if (win == 'X') {
-            gameOver = 1;
-            printf(" Player %s wins!", player_1.name);
-        }
-        // if the winner is O:
-        else if (win == 'O') {
-            gameOver = 1;
-            printf(" Player %s wins!", player_2.name);
-        }
-        // if there are no moves left:
-        else if (moves == 0) {
-            gameOver = 1;
-            printf(" It's a draw!");
-        }
-    }
-
-    printf("\n");
 }
 
 // runMenu -  a method with a loop that displays the game menu for the user
