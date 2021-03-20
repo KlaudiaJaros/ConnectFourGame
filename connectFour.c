@@ -41,7 +41,7 @@ void populateColumns(char* col, char* board) {
 void printMenu() {
 
     printf("\n ----------------------------");
-    printf("\n  Welcome to Connect Four! \n");
+    printf("\n\t   MENU \n");
     printf(" ----------------------------\n\n");
     printf(" Start a New Game: \n\n");
     printf(" 1 - Single Player \n");
@@ -123,20 +123,28 @@ char checkWin(char* board) {
     int oCount = 0;
 
     // check columns:
-    for (int i = 0; i < 6; i++) {
-        for (int n = 35 + i; n > 0; n = n - 7) {
-            if (board[n] != ' ') {
+
+    // first loop: iterate through the number of columns (7):
+    for (int column = 0; column < 7; column++) {
+        // second loop: start from the bottom of column 1 (index 35) because it's most likely to find 4 starting from the bottom
+        // add i to move to the next column, n>0 because the last index is 0, n-7 because there are 7 columns
+        for (int idx = 35 + column; idx > 0; idx = idx - 7) {
+
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
                 continue;
             }
-            else{
-                if (board[n] == 'X') {
+            else {
+                if (board[idx] == 'X') {
                     oCount = 0;
                     xCount++;
                     if (xCount >= 4) {
                         return 'X';
                     }
                 }
-                if (board[n] == 'O') {
+                if (board[idx] == 'O') {
                     xCount = 0;
                     oCount++;
                     if (oCount >= 4) {
@@ -145,13 +153,199 @@ char checkWin(char* board) {
                 }
             }
         }
+        xCount = 0;
+        oCount = 0;
     }
 
+    xCount = 0;
+    oCount = 0;
+
     // check rows:
+    // loop through the entire board:
+    for (int idx = 0; idx < 42; idx++) {
+
+        // if at the beginning of a new row
+        if (idx % 7 == 0) {
+            // reset the count:
+            xCount = 0;
+            oCount = 0;
+        }
+
+        // if empty, continue:
+        if (board[idx] == ' ') {
+            xCount = 0;
+            oCount = 0;
+            continue;
+        }
+        else {
+            if (board[idx] == 'X') {
+                oCount = 0;
+                xCount++;
+                if (xCount >= 4) {
+                    return 'X';
+                }
+            }
+            if (board[idx] == 'O') {
+                xCount = 0;
+                oCount++;
+                if (oCount >= 4) {
+                    return 'O';
+                }
+            }
+        }
+    }
+
+    xCount = 0;
+    oCount = 0;
+
+    // check diagonally up rows:
+    int column = 0;
+
+    // start at each row of the board,
+    // plus 7 because there are 7 columns:
+    for (int row = 0; row < 42; row = row + 7) {
+        //check indexes diagonally up from the beginning of the row:
+        for (int idx=row; idx >= column; idx = idx - 6) {
+
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        xCount = 0;
+        oCount = 0;
+        column++;
+    }
+
+    xCount = 0;
+    oCount = 0;
+
+    // check diagonally up from bottom columns:
+    for (int bottom = 36; bottom < 42; bottom++) {
+        //check indexes diagonally up:
+        for (int idx = bottom; idx >= column; idx = idx - 6) {
+
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        xCount = 0;
+        oCount = 0;
+        column=column+7;
+    }
+
+    xCount = 0;
+    oCount = 0;
+
+    // check diagonally down starting from top columns:
+
+    for (int column = 0; column < 7; column++) {
+        for (int idx = column; idx < 42; idx = idx + 8) {
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        xCount = 0;
+        oCount = 0;
+    }
+
+    xCount = 0;
+    oCount = 0;
+
+    // check diagonally down rows:
+
+    for (int row = 7; row < 42; row = row + 7) {
+        for (int idx = row; row < 42; row = row + 8) {
+
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        xCount = 0;
+        oCount = 0;
+    }
 
     return '-';
 }
 
+// takeTurnMultiplayer method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
+// returns: 0 if the move is valid and saved, 1 if the move is invalid
+// params: char *board - playing board, char token - user's token (X or O), int column - the column to where the move is being made
 int takeTurnMultiplayer(char* board, char token, int column)
 {
     int invalidMove = 0;
@@ -164,46 +358,66 @@ int takeTurnMultiplayer(char* board, char token, int column)
     printf(" Move for: %c, column: %d\n", token, column);
     int offset = column - 1;
 
-    for (int n = 35 + offset; n > 0; n=n-7) {
+    // starting from the bottom of the first column
+    // offset to move to the next column and minus 7 because there are 7 columns:
+    for (int n = 35 + offset; n > 0; n = n - 7) {
+
+        // if no space left:
         if (board[n] != ' ') {
             invalidMove = 1;
         }
+        // if there is space:
         else if (board[n] == ' ') {
             invalidMove = 0;
+            // save the move:
             board[n] = token;
             break;
         }
     }
 
-    if(invalidMove)
+    // if no space left in the chosen column:
+    if (invalidMove)
         printf("\n This column is full. Please choose a different one.\n");
 
     return invalidMove;
 }
 
+// multiplayer method - logic behind multiplayer game
 void multiplayer() {
+
+    printf(" Multiplayer game: \n\n");
+
+    // define players:
     struct Player player_1, player_2;
+
+    // create pointers to next, previous and temporary player:
     struct Player* next_player;
     struct Player* previous_player;
     struct Player* tmp_player;
 
+    // allocate space for players' names:
     char* p_1 = (char*)malloc(sizeof(char) * 20);
     char* p_2 = (char*)malloc(sizeof(char) * 20);
 
-    printf(" Multiplayer game: \n\n");
+    // ask for users' names:
 
     printf(" Player 1 name (max 20 char): ");
     scanf("%s", p_1);
+
+    // initialise player 1:
     player_1.name = p_1;
     player_1.winner = 0;
     player_1.token = 'X';
 
     printf(" Player 2 name (max 20 char): ");
     scanf("%s", p_2);
+
+    // initialise player 2:
     player_2.name = p_2;
     player_2.winner = 0;
     player_2.token = 'O';
 
+    // create the board and initialise it:
     char* board;
     board = initBoard();
     /*struct Board boardStruct;
@@ -215,19 +429,24 @@ void multiplayer() {
       printf(" %c ", *col1[i]);
     }*/
 
+    // set the next and previous players:
     next_player = &player_1;
     previous_player = &player_2;
     tmp_player = &player_2;
 
-    // while not game_over
+    printBoard(board);
+
+    // while not game over:
     int gameOver = 0;
     while (!gameOver) {
-        printBoard(board);
+
+        // get the user choice:
         int userChoice = 0;
         printf(" Your turn %s. Type in the column number: ", next_player->name);
-
         int validInput = scanf("%d", &userChoice);
-        while (validInput!=1) {
+
+        // validate user's input:
+        while (validInput != 1) {
             int temp;
             while ((temp = getchar()) != EOF && temp != '\n');
             printf("\n Incorrect input. Please choose a valid column: ");
@@ -237,6 +456,7 @@ void multiplayer() {
         int invalidMove = 0;
         invalidMove = takeTurnMultiplayer(board, next_player->token, userChoice);
 
+        // if the move is valid, swap players:
         if (!invalidMove)
         {
             tmp_player = next_player;
@@ -244,40 +464,53 @@ void multiplayer() {
             previous_player = tmp_player;
         }
 
+        printBoard(board);
+
         // check if there are any moves left:
         char win = checkWin(board);
         int moves = movesLeft(board);
+
+        // if there is no winner and moves left:
         if (win == '-' && moves) {
             gameOver = 0;
         }
-        else if (moves == 0) {
-            gameOver = 1;
-            printf("It's a draw!");
-        }
+        // if the winner is X:
         else if (win == 'X') {
             gameOver = 1;
-            printf("Player %s wins!", player_1.name);
+            printf(" Player %s wins!", player_1.name);
         }
+        // if the winner is O:
         else if (win == 'O') {
             gameOver = 1;
-            printf("Player %s wins!", player_2.name);
+            printf(" Player %s wins!", player_2.name);
+        }
+        // if there are no moves left:
+        else if (moves == 0) {
+            gameOver = 1;
+            printf(" It's a draw!");
         }
     }
+
+    printf("\n");
 }
 
+// runMenu -  a method with a loop that displays the game menu for the user
+void runMenu() {
 
-int main() {
-
-    printMenu();
-
+    // get user's menu choice:
     int gettingChoice = 1;
-    printf("\n");
 
     while (gettingChoice) {
+
+        printMenu();
+        printf("\n");
+
         int userChoice = 0;
         printf(" Your choice: ");
         fflush(stdin);
-        int validInput= scanf("%d", &userChoice);
+        int validInput = scanf("%d", &userChoice);
+
+        // validate user's input:
         while (validInput != 1) {
             int temp;
             while ((temp = getchar()) != EOF && temp != '\n');
@@ -285,21 +518,22 @@ int main() {
             validInput = scanf("%d", &userChoice);
         }
 
+        // call the right method based on user's choice:
         switch (userChoice) {
         case 1:
-            gettingChoice = 0;
+            //gettingChoice = 0;
             singlePlayer();
             break;
         case 2:
-            gettingChoice = 0;
+            //gettingChoice = 0;
             multiplayer();
             break;
         case 3:
-            gettingChoice = 0;
+            //gettingChoice = 0;
             gameHistory();
             break;
         case 4:
-            gettingChoice = 0;
+            //gettingChoice = 0;
             settings();
             break;
         case 5:
@@ -312,4 +546,14 @@ int main() {
             printf("\n Please select a valid option.");
         }
     }
+}
+
+int main() {
+
+    printf("\n ****************************");
+    printf("\n * Welcome to Connect Four! * \n");
+    printf(" ****************************\n\n");
+
+    runMenu();
+
 }
