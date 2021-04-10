@@ -18,6 +18,7 @@ struct Player {
     char* name;
     int winner;
     char token;
+    int isComputer;
 };
 
 struct Board {
@@ -25,6 +26,113 @@ struct Board {
     char* col1;
 
 };
+
+struct LinkedList {
+    int data;
+    struct LinkedList* link;
+};
+
+struct GameHistory {
+    struct LinkedList* gameMovesList;
+    struct GameHistory* next;
+};
+
+
+// adds a new element to the end of a LinkedList
+void appendLinkedList(struct LinkedList** list, int num)
+{
+    struct LinkedList* temp, * r;
+    if (*list == NULL)
+    {
+        temp = (struct LinkedList*)malloc(sizeof(struct LinkedList));
+        temp->data = num;
+        temp->link = NULL;
+        *list = temp;
+    }
+    else
+    {
+        temp = *list;
+        while (temp->link != NULL)
+        {
+            temp = temp->link;
+        }
+
+        r = (struct LinkedList*)malloc(sizeof(struct LinkedList));
+        r->data = num;
+        r->link = NULL;
+        temp->link = r;
+    }
+}
+
+// adds a new element to the end of a GameHistory
+void appendHistory(struct GameHistory** history, struct LinkedList* list)
+{
+    struct GameHistory* temp, * r;
+    if (*history == NULL)
+    {
+        temp = (struct GameHistory*)malloc(sizeof(struct GameHistory));
+        temp->gameMovesList = list;
+        temp->next = NULL;
+        *history = temp;
+    }
+    else
+    {
+        temp = *history;
+        while (temp->next != NULL)
+        {
+            temp = temp->next;
+        }
+
+        r = (struct GameHistory*)malloc(sizeof(struct GameHistory));
+        r->gameMovesList = list;
+        r->next = NULL;
+        temp->next = r;
+    }
+}
+
+// display all elements from a LinkedList:
+void displayLinkedList(struct LinkedList* list)
+{
+    // while the pointer to the next element is not empty:
+    while (list != NULL)
+    {
+        // print the stored data:
+        printf("%d\n", list->data);
+        // point to the next element:
+        list = list->link;
+    }
+    printf("\n");
+}
+
+
+// display all elements from a GameHistory:
+void displayHistory(struct GameHistory* list)
+{
+    // while the pointer to the next element is not empty:
+    while (list != NULL)
+    {
+        // print the stored data:
+        displayLinkedList(list->gameMovesList);
+        // point to the next element:
+        list = list->next;
+    }
+    printf("\n");
+}
+
+int countHistory(struct GameHistory * list)
+{
+  int count=0;
+
+  // while the pointer to the next node is not empty:
+  while (list!=NULL)
+  {
+    // list pointer becomes the next link
+    list=list->link;
+    // increment the count to count nodes/elements:
+    count++;
+  }
+  return count;
+}
 
 void populateColumns(char* col, char* board) {
 
@@ -98,8 +206,11 @@ void settings() {
     printf(" Settings: \n");
 }
 
-void gameHistory() {
+void gameHistory(struct GameHistory *history) {
     printf(" Game History: \n");
+
+    int countGames = countHistory(history);
+    displayHistory(history);
 }
 
 
@@ -203,7 +314,7 @@ char checkWin(char* board) {
     // plus 7 because there are 7 columns:
     for (int row = 0; row < 42; row = row + 7) {
         //check indexes diagonally up from the beginning of the row:
-        for (int idx=row; idx >= column; idx = idx - 6) {
+        for (int idx = row; idx >= column; idx = idx - 6) {
 
             // if empty, continue:
             if (board[idx] == ' ') {
@@ -266,7 +377,7 @@ char checkWin(char* board) {
         }
         xCount = 0;
         oCount = 0;
-        column=column+7;
+        column = column + 7;
     }
 
     xCount = 0;
@@ -351,15 +462,15 @@ int takeTurn(char* board, char token, int column, int computerTurn)
     {
         invalidMove = 1;
         // if it is not a computer turn, display information for the player:
-        if(!computerTurn)
+        if (!computerTurn)
             printf("\n No such column. Please choose a different one.\n");
         return invalidMove;
     }
-    printf(" Move: placed token %c into column %d\n", token, column);
+    printf("\n Move: placed token %c into column %d\n", token, column);
     int offset = column - 1;
 
-    // starting from the bottom of the first column
-    // offset to move to the next column and minus 7 because there are 7 columns:
+    // starting from the bottom of the specified column
+    // offset to move to the next element in the column and minus 7 because there are 7 columns:
     for (int n = 35 + offset; n > 0; n = n - 7) {
 
         // if no space left:
@@ -382,12 +493,29 @@ int takeTurn(char* board, char token, int column, int computerTurn)
     return invalidMove;
 }
 
+// Undo the latest move in the specified column
+void undoMove(char* board, int column) {
+
+    int offset = column - 1; // offset to move to the specified column only
+
+    // starting from the top of the column
+    // plus 7 to move to the next element in the column, because there are 7 columns:
+    for (int n = offset; n < 42; n = n + 7) {
+        // erase the latest move in that column:
+        if (board[n] != ' ') {
+            board[n] = ' ';
+            break;
+        }
+    }
+}
 
 
-void game(struct Player *player_1, struct Player *player_2, int singleplayer) {
+struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer) {
     // create the board and initialise it:
     char* board;
     board = initBoard();
+    struct LinkedList* moves;
+    moves = NULL;
     /*struct Board boardStruct;
     boardStruct.board=board;
 
@@ -415,17 +543,21 @@ void game(struct Player *player_1, struct Player *player_2, int singleplayer) {
 
         // get the next player choice:
         int userChoice = 0;
+        int randNumber = -1; // computer choice
+
         printf(" Your turn %s. ", next_player->name);
         int invalidMove = 1;
 
-        if (singleplayer==1 && !strcmp(next_player->name, "Computer")) {
+        // if singleplayer mode and the player is a computer:
+        if (singleplayer == 1 && next_player->isComputer == 1) {
+            printf("\n");
             while (invalidMove) {
                 srand(time(0));
-                int randNumber = rand() % 7;
-                printf("\n");
-                invalidMove = takeTurn(board, next_player->token, randNumber,1);
+                randNumber = rand() % 7;
+                invalidMove = takeTurn(board, next_player->token, randNumber, 1);
             }
         }
+        // if not singleplayer or the player is not a computer:
         else {
             printf("Type in the column number: ");
             int validInput = scanf("%d", &userChoice);
@@ -437,18 +569,57 @@ void game(struct Player *player_1, struct Player *player_2, int singleplayer) {
                 printf("\n Incorrect input. Please choose a valid column: ");
                 validInput = scanf("%d", &userChoice);
             }
-            invalidMove = takeTurn(board, next_player->token, userChoice,0);
-        }
-
-        // if the move is valid, swap players:
-        if (!invalidMove)
-        {
-            tmp_player = next_player;
-            next_player = previous_player;
-            previous_player = tmp_player;
+            invalidMove = takeTurn(board, next_player->token, userChoice, 0);
         }
 
         printBoard(board);
+
+        // if the move is valid and the player is not a computer, confirm the move and swap players:
+        if (!invalidMove && next_player->isComputer == 0)
+        {
+            printf("Confirm your move:\n");
+            printf(" 1 - Keep my move\n");
+            printf(" 2 - Undo my move\n");
+            printf("Your choice: ");
+            int confirmMove = 0;
+
+            while (!confirmMove) {
+                // validate user's input:
+                int validInput = scanf("%d", &confirmMove);
+                /*while (validInput != 1) {
+                    int temp;
+                    while ((temp = getchar()) != EOF && temp != '\n');
+                    printf("\n Incorrect input. Please choose a valid option: ");
+                    validInput = scanf("%d", &confirmMove);
+                }*/
+
+                // based on user input:
+                switch (confirmMove) {
+                case 1:
+                    // keep playing
+                    tmp_player = next_player;
+                    next_player = previous_player;
+                    previous_player = tmp_player;
+                    appendLinkedList(&moves, userChoice); // save the user's move
+                    break;
+                case 2:
+                    //undo the move:
+                    undoMove(board, userChoice);
+                    printBoard(board);
+                    break;
+                default:
+                    confirmMove = 0;
+                    break;
+                }
+            }
+            printf("\n");
+        } // if the move is valid and the player is a computer, just swap players:
+        else if (!invalidMove && next_player->isComputer == 1) {
+            tmp_player = next_player;
+            next_player = previous_player;
+            previous_player = tmp_player;
+            appendLinkedList(&moves, randNumber); // save computer's move
+        }
 
         // check if there are any moves left:
         char win = checkWin(board);
@@ -474,8 +645,9 @@ void game(struct Player *player_1, struct Player *player_2, int singleplayer) {
             printf(" It's a draw!");
         }
     }
-
+    displayLinkedList(moves); // debug
     printf("\n");
+    return moves;
 }
 
 // multiplayer method - logic behind multiplayer game
@@ -499,6 +671,7 @@ void multiplayer() {
     player_1.name = p_1;
     player_1.winner = 0;
     player_1.token = 'X';
+    player_1.isComputer = 0;
 
     printf(" Player 2 name (max 20 char): ");
     scanf("%s", p_2);
@@ -507,12 +680,13 @@ void multiplayer() {
     player_2.name = p_2;
     player_2.winner = 0;
     player_2.token = 'O';
+    player_2.isComputer = 0;
 
     game(&player_1, &player_2, 0);
 
 }
 
-void singlePlayer() {
+struct LinkedList* singlePlayer() {
 
     printf("\n Singleplayer game: \n\n");
 
@@ -531,14 +705,16 @@ void singlePlayer() {
     player_1.name = p_1;
     player_1.winner = 0;
     player_1.token = 'X';
+    player_1.isComputer = 0;
 
     // initialise player 2:
     char computerName[9] = "Computer";
     player_2.name = &computerName[0];
     player_2.winner = 0;
     player_2.token = 'O';
+    player_2.isComputer = 1;
 
-    game(&player_1, &player_2, 1);
+    return game(&player_1, &player_2, 1);
 
 }
 
@@ -547,6 +723,12 @@ void runMenu() {
 
     // get user's menu choice:
     int gettingChoice = 1;
+
+    // save game history:
+    struct LinkedList* gameMoves;
+    gameMoves = NULL;
+    struct GameHistory* history;
+    history = NULL;
 
     while (gettingChoice) {
 
@@ -570,7 +752,8 @@ void runMenu() {
         switch (userChoice) {
         case 1:
             //gettingChoice = 0;
-            singlePlayer();
+            gameMoves = singlePlayer();
+            appendHistory(&history, gameMoves);
             break;
         case 2:
             //gettingChoice = 0;
@@ -578,7 +761,7 @@ void runMenu() {
             break;
         case 3:
             //gettingChoice = 0;
-            gameHistory();
+            gameHistory(history);
             break;
         case 4:
             //gettingChoice = 0;
