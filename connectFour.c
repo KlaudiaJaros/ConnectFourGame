@@ -35,6 +35,8 @@ struct LinkedList {
 struct GameHistory {
     struct LinkedList* gameMovesList;
     struct GameHistory* next;
+    char* player_1;
+    char* player_2;
 };
 
 
@@ -65,7 +67,7 @@ void appendLinkedList(struct LinkedList** list, int num)
 }
 
 // adds a new element to the end of a GameHistory
-void appendHistory(struct GameHistory** history, struct LinkedList* list)
+void appendHistory(struct GameHistory** history, struct LinkedList* list, char* player_1, char* player_2)
 {
     struct GameHistory* temp, * r;
     if (*history == NULL)
@@ -73,6 +75,8 @@ void appendHistory(struct GameHistory** history, struct LinkedList* list)
         temp = (struct GameHistory*)malloc(sizeof(struct GameHistory));
         temp->gameMovesList = list;
         temp->next = NULL;
+        temp->player_1 = player_1;
+        temp->player_2 = player_2;
         *history = temp;
     }
     else
@@ -86,6 +90,8 @@ void appendHistory(struct GameHistory** history, struct LinkedList* list)
         r = (struct GameHistory*)malloc(sizeof(struct GameHistory));
         r->gameMovesList = list;
         r->next = NULL;
+        r->player_1 = player_1;
+        r->player_2 = player_2;
         temp->next = r;
     }
 }
@@ -108,30 +114,40 @@ void displayLinkedList(struct LinkedList* list)
 // display all elements from a GameHistory:
 void displayHistory(struct GameHistory* list)
 {
+    if (list == NULL) {
+        printf(" No game history found.");
+        return;
+    }
+
+    int count = 1;
+
     // while the pointer to the next element is not empty:
     while (list != NULL)
     {
+        printf(" %d. %s vs %s \n", count, list->player_1, list->player_2);
         // print the stored data:
+        printf("Moves: \n");
         displayLinkedList(list->gameMovesList);
         // point to the next element:
         list = list->next;
+        count++;
     }
     printf("\n");
 }
 
-int countHistory(struct GameHistory * list)
+int countHistory(struct GameHistory* list)
 {
-  int count=0;
+    int count = 0;
 
-  // while the pointer to the next node is not empty:
-  while (list!=NULL)
-  {
-    // list pointer becomes the next link
-    list=list->link;
-    // increment the count to count nodes/elements:
-    count++;
-  }
-  return count;
+    // while the pointer to the next node is not empty:
+    while (list != NULL)
+    {
+        // list pointer becomes the next link
+        list = list->next;
+        // increment the count to count nodes/elements:
+        count++;
+    }
+    return count;
 }
 
 void populateColumns(char* col, char* board) {
@@ -206,11 +222,21 @@ void settings() {
     printf(" Settings: \n");
 }
 
-void gameHistory(struct GameHistory *history) {
+void gameHistory(struct GameHistory* history) {
     printf(" Game History: \n");
 
-    int countGames = countHistory(history);
-    displayHistory(history);
+    int count = 1;
+    // while the pointer to the next element is not empty:
+    while (history != NULL)
+    {
+        printf(" %d. %s vs %s \n", count, history->player_1, history->player_2);
+        // print the stored data:
+        printf("Moves: \n");
+        displayLinkedList(history->gameMovesList);
+        // point to the next element:
+        history = history->next;
+    }
+    printf("\n");
 }
 
 
@@ -420,7 +446,7 @@ char checkWin(char* board) {
     // check diagonally down rows:
 
     for (int row = 7; row < 42; row = row + 7) {
-        for (int idx = row; row < 42; row = row + 8) {
+        for (int idx = row; idx < 42; idx = idx + 8) {
 
             // if empty, continue:
             if (board[idx] == ' ') {
@@ -514,8 +540,8 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     // create the board and initialise it:
     char* board;
     board = initBoard();
-    struct LinkedList* moves;
-    moves = NULL;
+    struct LinkedList* gameMoves;
+    gameMoves = NULL;
     /*struct Board boardStruct;
     boardStruct.board=board;
 
@@ -600,7 +626,7 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
-                    appendLinkedList(&moves, userChoice); // save the user's move
+                    appendLinkedList(&gameMoves, userChoice); // save the user's move
                     break;
                 case 2:
                     //undo the move:
@@ -618,7 +644,7 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             tmp_player = next_player;
             next_player = previous_player;
             previous_player = tmp_player;
-            appendLinkedList(&moves, randNumber); // save computer's move
+            appendLinkedList(&gameMoves, randNumber); // save computer's move
         }
 
         // check if there are any moves left:
@@ -645,18 +671,22 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             printf(" It's a draw!");
         }
     }
-    displayLinkedList(moves); // debug
+    displayLinkedList(gameMoves); // debug
     printf("\n");
-    return moves;
+    return gameMoves;
 }
 
 // multiplayer method - logic behind multiplayer game
-void multiplayer() {
+void multiplayer(struct GameHistory **history) {
 
     printf("\n Multiplayer game: \n\n");
 
     // define players:
     struct Player player_1, player_2;
+
+    // save moves:
+    struct LinkedList* gameMoves;
+    gameMoves = NULL;
 
     // allocate space for players' names:
     char* p_1 = (char*)malloc(sizeof(char) * 20);
@@ -682,16 +712,24 @@ void multiplayer() {
     player_2.token = 'O';
     player_2.isComputer = 0;
 
-    game(&player_1, &player_2, 0);
+    // document the players in game history:
+
+
+    gameMoves = game(&player_1, &player_2, 0);
+    appendHistory(history, gameMoves, player_1.name, player_2.name);
 
 }
 
-struct LinkedList* singlePlayer() {
+void singlePlayer(struct GameHistory** history) {
 
     printf("\n Singleplayer game: \n\n");
 
     // define players:
     struct Player player_1, player_2;
+
+    // save moves:
+    struct LinkedList* gameMoves;
+    gameMoves = NULL;
 
     // allocate space for players' names:
     char* p_1 = (char*)malloc(sizeof(char) * 20);
@@ -708,13 +746,14 @@ struct LinkedList* singlePlayer() {
     player_1.isComputer = 0;
 
     // initialise player 2:
-    char computerName[9] = "Computer";
-    player_2.name = &computerName[0];
+    char computerName[] = "Computer";
+    player_2.name = computerName;
     player_2.winner = 0;
     player_2.token = 'O';
     player_2.isComputer = 1;
 
-    return game(&player_1, &player_2, 1);
+    gameMoves = game(&player_1, &player_2, 1);
+    appendHistory(history, gameMoves, player_1.name, player_2.name);
 
 }
 
@@ -725,8 +764,6 @@ void runMenu() {
     int gettingChoice = 1;
 
     // save game history:
-    struct LinkedList* gameMoves;
-    gameMoves = NULL;
     struct GameHistory* history;
     history = NULL;
 
@@ -752,12 +789,15 @@ void runMenu() {
         switch (userChoice) {
         case 1:
             //gettingChoice = 0;
-            gameMoves = singlePlayer();
-            appendHistory(&history, gameMoves);
+
+            singlePlayer(&history);
+            //gameMoves = singlePlayer();
+            //appendHistory(&history, gameMoves);
+
             break;
         case 2:
             //gettingChoice = 0;
-            multiplayer();
+            multiplayer(&history);
             break;
         case 3:
             //gettingChoice = 0;
