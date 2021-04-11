@@ -9,15 +9,15 @@ My implementation of Connect Four uses a Text User Interface on a command line a
 
 ### Game options:
 
-## Multiplayer
+#### Multiplayer
 
 Play with your Friend
 
-## Single player
+#### Single player
 
 Play against a Computer  
 
-## View game history
+#### View game history
 
 Want to re-watch that match you won? Go to Game History to see a replay of your previous games.
 
