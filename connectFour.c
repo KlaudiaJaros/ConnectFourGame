@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <time.h>
 
+char checkWin(char* board);
 
 struct Player {
     char* name;
@@ -110,6 +111,43 @@ void displayLinkedList(struct LinkedList* list)
     printf("\n");
 }
 
+// deletes an element at a specified location
+void deleteAt(struct LinkedList** list, int location)
+{
+    struct LinkedList* temp, *r = NULL;
+    temp = *list;
+    int i;
+
+    for (i = 0; i < location; i++) // go to one location before the element that needs deleting
+    {
+        r = temp; // save that location (one before)
+        temp = temp->link; // save the element to be deleted
+    }
+    if (temp->link != NULL) {
+        r->link = temp->link; // make the previous element point to the next element
+    }
+    else {
+        r->link = NULL;
+    }
+    free(temp); // release the unwanted element in the middle
+}
+
+// Count elements in a LinkedList
+// parameter: a pointer to the first element of the LinkedList
+int count(struct LinkedList* list)
+{
+    int count = 0;
+
+    // while the pointer to the next node is not empty:
+    while (list != NULL)
+    {
+        // list pointer becomes the next link
+        list = list->link;
+        // increment the count to count nodes/elements:
+        count++;
+    }
+    return count;
+}
 
 // display all elements from a GameHistory:
 void displayHistory(struct GameHistory* list)
@@ -222,21 +260,124 @@ void settings() {
     printf(" Settings: \n");
 }
 
+void replayGame(struct GameHistory *gameHistory) {
+    struct LinkedList* tempGame;
+    tempGame = gameHistory->gameMovesList;
+    int movesCount = count(tempGame);
+
+    char* board;
+    board = initBoard();
+    char token = 'X'; // first player
+    char* player1 = gameHistory->player_1;
+    char* player2 = gameHistory->player_2;
+    char* nextPlayer = player1;
+    char* previousPlayer=NULL;
+
+    for (int i = 0; i < movesCount; i++) {
+        int move = tempGame->data;
+        int offset = move - 1;
+
+        printf(" Player %s move: token %c to column %d \n", nextPlayer, token, move);
+
+        // starting from the bottom of the specified column
+        // offset to move to the next element in the column and minus 7 because there are 7 columns:
+        for (int n = 35 + offset; n > 0; n = n - 7) {
+
+            // if the space is taken:
+            if (board[n] != ' ') {
+                continue;
+            }
+            // if there is space:
+            else if (board[n] == ' ') {
+
+                // save the move:
+                board[n] = token;
+                break;
+            }
+        }
+        printBoard(board);
+        previousPlayer = nextPlayer;
+        // swap players:
+        if (token == 'X') {
+            token = 'O';
+            nextPlayer = player2;
+        }
+        else {
+            token = 'X';
+            nextPlayer = player1;
+        }
+        tempGame = tempGame->link;
+    }
+    char win = checkWin(board);
+    if (win == '-') {
+        printf("Game over! It's a draw!");
+    }
+    else if (win == 'X' || win == 'O') {
+        printf("\n Game over! Player %s wins\n", previousPlayer);
+    }
+}
+
 void gameHistory(struct GameHistory* history) {
-    printf(" Game History: \n");
+    printf("\n Game History: \n");
+
+    if (history == NULL) {
+        printf(" No game history found.\n");
+        return;
+    }
 
     int count = 1;
+    int gameCount = countHistory(history);
+    struct GameHistory* tempHistory;
+    tempHistory = history;
     // while the pointer to the next element is not empty:
-    while (history != NULL)
+    while (tempHistory != NULL)
     {
-        printf(" %d. %s vs %s \n", count, history->player_1, history->player_2);
-        // print the stored data:
-        printf("Moves: \n");
-        displayLinkedList(history->gameMovesList);
+        printf(" %d. %s vs %s \n", count, tempHistory->player_1, tempHistory->player_2);
+        // print the stored moves:
+        //printf("Moves: \n");
+        //displayLinkedList(history->gameMovesList);
         // point to the next element:
-        history = history->next;
+        tempHistory = tempHistory->next;
+        count++;
     }
     printf("\n");
+    printf(" Choose the game number to see a game replay or 0 to exit... \n");
+
+
+    int userChoice = -1;
+    int temp;
+
+    while (userChoice < 0) {
+        printf("\n Your choice: ");
+        while ((temp = getchar()) != EOF && temp != '\n'); // to get rid of any white characters
+        scanf("%d", &userChoice);
+        if (userChoice == 0) {
+            return;
+        }
+        else if (userChoice > 0 && userChoice <= gameCount) {
+            // replay game
+            printf("\n Game number %d replay: \n", userChoice);
+
+            int i = 1;
+            struct GameHistory *tempGame, *chosenGame = NULL;
+            tempGame = history;
+
+            // find the game choosen by the user:
+            while (i <= userChoice) {
+                chosenGame = tempGame;
+                tempGame = chosenGame->next;
+                i++;
+            }
+            // display the game choose by the user:
+            displayLinkedList(chosenGame->gameMovesList);
+            replayGame(chosenGame);
+        }
+        else {
+            printf(" Please choose a valid option. \n");
+            userChoice = -1;
+        }
+    }
+
 }
 
 
@@ -671,13 +812,13 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             printf(" It's a draw!");
         }
     }
-    displayLinkedList(gameMoves); // debug
+    //displayLinkedList(gameMoves); // debug
     printf("\n");
     return gameMoves;
 }
 
 // multiplayer method - logic behind multiplayer game
-void multiplayer(struct GameHistory **history) {
+void multiplayer(struct GameHistory** history) {
 
     printf("\n Multiplayer game: \n\n");
 
@@ -746,7 +887,8 @@ void singlePlayer(struct GameHistory** history) {
     player_1.isComputer = 0;
 
     // initialise player 2:
-    char computerName[] = "Computer";
+    char* computerName = (char*)malloc(sizeof(char) * 10);
+    strcpy(computerName, "Computer\0");
     player_2.name = computerName;
     player_2.winner = 0;
     player_2.token = 'O';
