@@ -1,6 +1,15 @@
-game:
-	cl connectFour.c
+
+install:
+	cl connectFour.c linkedList.c
+	cl /c linkedList.c
+	lib linkedList.obj
+	link connectFour.obj linkedList.lib
+
+delete:
+	del *.c *.obj *.exe *.lib
+	
 clear:
-	del *obj
-	del *exe
-	del *asm
+	del *.obj *.exe *.lib
+
+run:
+	connectFour.exe

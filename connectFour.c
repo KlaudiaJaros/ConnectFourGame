@@ -12,8 +12,8 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-
-char checkWin(char* board);
+#include "linkedList.h"
+#include "connectFour.h"
 
 struct Player {
     char* name;
@@ -22,50 +22,12 @@ struct Player {
     int isComputer;
 };
 
-struct Board {
-    char* board;
-    char* col1;
-
-};
-
-struct LinkedList {
-    int data;
-    struct LinkedList* link;
-};
-
 struct GameHistory {
     struct LinkedList* gameMovesList;
     struct GameHistory* next;
     char* player_1;
     char* player_2;
 };
-
-
-// adds a new element to the end of a LinkedList
-void appendLinkedList(struct LinkedList** list, int num)
-{
-    struct LinkedList* temp, * r;
-    if (*list == NULL)
-    {
-        temp = (struct LinkedList*)malloc(sizeof(struct LinkedList));
-        temp->data = num;
-        temp->link = NULL;
-        *list = temp;
-    }
-    else
-    {
-        temp = *list;
-        while (temp->link != NULL)
-        {
-            temp = temp->link;
-        }
-
-        r = (struct LinkedList*)malloc(sizeof(struct LinkedList));
-        r->data = num;
-        r->link = NULL;
-        temp->link = r;
-    }
-}
 
 // adds a new element to the end of a GameHistory
 void appendHistory(struct GameHistory** history, struct LinkedList* list, char* player_1, char* player_2)
@@ -97,82 +59,6 @@ void appendHistory(struct GameHistory** history, struct LinkedList* list, char* 
     }
 }
 
-// display all elements from a LinkedList:
-void displayLinkedList(struct LinkedList* list)
-{
-    // while the pointer to the next element is not empty:
-    while (list != NULL)
-    {
-        // print the stored data:
-        printf("%d\n", list->data);
-        // point to the next element:
-        list = list->link;
-    }
-    printf("\n");
-}
-
-// deletes an element at a specified location
-void deleteAt(struct LinkedList** list, int location)
-{
-    struct LinkedList* temp, *r = NULL;
-    temp = *list;
-    int i;
-
-    for (i = 0; i < location; i++) // go to one location before the element that needs deleting
-    {
-        r = temp; // save that location (one before)
-        temp = temp->link; // save the element to be deleted
-    }
-    if (temp->link != NULL) {
-        r->link = temp->link; // make the previous element point to the next element
-    }
-    else {
-        r->link = NULL;
-    }
-    free(temp); // release the unwanted element in the middle
-}
-
-// Count elements in a LinkedList
-// parameter: a pointer to the first element of the LinkedList
-int count(struct LinkedList* list)
-{
-    int count = 0;
-
-    // while the pointer to the next node is not empty:
-    while (list != NULL)
-    {
-        // list pointer becomes the next link
-        list = list->link;
-        // increment the count to count nodes/elements:
-        count++;
-    }
-    return count;
-}
-
-// display all elements from a GameHistory:
-void displayHistory(struct GameHistory* list)
-{
-    if (list == NULL) {
-        printf(" No game history found.");
-        return;
-    }
-
-    int count = 1;
-
-    // while the pointer to the next element is not empty:
-    while (list != NULL)
-    {
-        printf(" %d. %s vs %s \n", count, list->player_1, list->player_2);
-        // print the stored data:
-        printf("Moves: \n");
-        displayLinkedList(list->gameMovesList);
-        // point to the next element:
-        list = list->next;
-        count++;
-    }
-    printf("\n");
-}
-
 int countHistory(struct GameHistory* list)
 {
     int count = 0;
@@ -188,10 +74,11 @@ int countHistory(struct GameHistory* list)
     return count;
 }
 
-void populateColumns(char* col, char* board) {
+void populateColumns(char* col, char* board) 
+{
 
     int idx = 0;
-    for (int i = 35; i > 0; i - 7) {
+    for (int i = 35; i > 0; i=i-7) {
         col[idx] = board[i];
         idx++;
     }
@@ -201,7 +88,8 @@ void populateColumns(char* col, char* board) {
 /*
   printMenu() - a void function that prints the application's menu
 */
-void printMenu() {
+void printMenu() 
+{
 
     printf("\n ----------------------------");
     printf("\n\t   MENU \n");
@@ -219,7 +107,8 @@ void printMenu() {
 /*
   initBoard() - initialises the board for the game
 */
-char* initBoard() {
+char* initBoard() 
+{
     char* board = (char*)malloc(sizeof(char) * 42);
     for (int i = 0; i < 42; i++)
     {
@@ -661,7 +550,8 @@ int takeTurn(char* board, char token, int column, int computerTurn)
 }
 
 // Undo the latest move in the specified column
-void undoMove(char* board, int column) {
+void undoMove(char* board, int column) 
+{
 
     int offset = column - 1; // offset to move to the specified column only
 
@@ -677,7 +567,8 @@ void undoMove(char* board, int column) {
 }
 
 
-struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer) {
+struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer) 
+{
     // create the board and initialise it:
     char* board;
     board = initBoard();
@@ -818,7 +709,8 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
 }
 
 // multiplayer method - logic behind multiplayer game
-void multiplayer(struct GameHistory** history) {
+void multiplayer(struct GameHistory** history) 
+{
 
     printf("\n Multiplayer game: \n\n");
 
@@ -861,7 +753,8 @@ void multiplayer(struct GameHistory** history) {
 
 }
 
-void singlePlayer(struct GameHistory** history) {
+void singlePlayer(struct GameHistory** history) 
+{
 
     printf("\n Singleplayer game: \n\n");
 
