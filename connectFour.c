@@ -15,6 +15,9 @@
 #include "linkedList.h"
 #include "connectFour.h"
 
+/*
+    Player struct to store information about the player
+*/
 struct Player {
     char* name;
     int winner;
@@ -22,6 +25,9 @@ struct Player {
     int isComputer;
 };
 
+/*
+    GameHistory struct (linked list) to store information about past games
+*/
 struct GameHistory {
     struct LinkedList* gameMovesList;
     struct GameHistory* next;
@@ -29,12 +35,21 @@ struct GameHistory {
     char* player_2;
 };
 
-// adds a new element to the end of a GameHistory
+/* 
+    appendHistory() - adds a new GameHistory element to the end of a GameHistory list
+    Parameters:
+    struct GameHistory** history - a pointer to a GameHistory to be appended 
+    struct LinkedList* list - a pointer to a list of moves that were taken in a game to be stored in GameHistory
+    char* player_1 - a pointer to player 1 name
+    char* player_2 - a pointer to player 2 name
+*/
 void appendHistory(struct GameHistory** history, struct LinkedList* list, char* player_1, char* player_2)
 {
     struct GameHistory* temp, * r;
+    // if history is null, just add the first element:
     if (*history == NULL)
     {
+        // allocate space for the new element and save the given parameters in the struct:
         temp = (struct GameHistory*)malloc(sizeof(struct GameHistory));
         temp->gameMovesList = list;
         temp->next = NULL;
@@ -45,11 +60,12 @@ void appendHistory(struct GameHistory** history, struct LinkedList* list, char* 
     else
     {
         temp = *history;
+        // go to the end of the linked list:
         while (temp->next != NULL)
         {
             temp = temp->next;
         }
-
+        // allocate space for the new element and save the given parameters within the struct:
         r = (struct GameHistory*)malloc(sizeof(struct GameHistory));
         r->gameMovesList = list;
         r->next = NULL;
@@ -59,6 +75,11 @@ void appendHistory(struct GameHistory** history, struct LinkedList* list, char* 
     }
 }
 
+/*
+    countHistory() method counts how many games(elements) there are in the GameHistory list (linked list)
+    Parameters: struct GameHistory* list - a pointer to a GameHistory to be counted
+    Returns: int - the number of games stored within the list
+*/
 int countHistory(struct GameHistory* list)
 {
     int count = 0;
@@ -74,42 +95,15 @@ int countHistory(struct GameHistory* list)
     return count;
 }
 
-void populateColumns(char* col, char* board) 
-{
-
-    int idx = 0;
-    for (int i = 35; i > 0; i=i-7) {
-        col[idx] = board[i];
-        idx++;
-    }
-
-}
-
-/*
-  printMenu() - a void function that prints the application's menu
-*/
-void printMenu() 
-{
-
-    printf("\n ----------------------------");
-    printf("\n\t   MENU \n");
-    printf(" ----------------------------\n\n");
-    printf(" Start a New Game: \n\n");
-    printf(" 1 - Single Player \n");
-    printf(" 2 - Multiplayer \n");
-    printf("\n ...or choose an option below:\n\n");
-    printf(" 3 - View game history\n");
-    printf(" 4 - Settings\n");
-    printf(" 5 - Exit\n");
-    printf(" ----------------------------\n");
-}
-
 /*
   initBoard() - initialises the board for the game
+  Returns: a char pointer to the initialised board
 */
 char* initBoard() 
 {
+    // allocate space for the board:
     char* board = (char*)malloc(sizeof(char) * 42);
+    // board size of 42, initialise its elements:
     for (int i = 0; i < 42; i++)
     {
         board[i] = ' ';
@@ -119,6 +113,7 @@ char* initBoard()
 
 /*
   printBoard() - prints the current state of the board
+  Parameters: char *board - a pointer to the board to be printed
 */
 void printBoard(char* board)
 {
@@ -145,30 +140,61 @@ void printBoard(char* board)
     printf("\n");
 }
 
+/*
+  printMenu() - a void function that prints the application's menu
+*/
+void printMenu() 
+{
+
+    printf("\n ----------------------------");
+    printf("\n\t   MENU \n");
+    printf(" ----------------------------\n\n");
+    printf(" Start a New Game: \n\n");
+    printf(" 1 - Single Player \n");
+    printf(" 2 - Multiplayer \n");
+    printf("\n ...or choose an option below:\n\n");
+    printf(" 3 - View game history\n");
+    printf(" 4 - Settings\n");
+    printf(" 5 - Exit\n");
+    printf(" ----------------------------\n");
+}
+
 void settings() {
     printf(" Settings: \n");
 }
 
+/*
+    Given a pointer to a GameHistory struct, replayGame() method replays the game for the user.
+    Parameters: struct GameHistory *gameHistory - a pointer to a game history to be replayed
+*/
 void replayGame(struct GameHistory *gameHistory) {
+
+    // get the list of moves played in the game:
     struct LinkedList* tempGame;
     tempGame = gameHistory->gameMovesList;
     int movesCount = count(tempGame);
 
+    // initialise the board for the game:
     char* board;
     board = initBoard();
-    char token = 'X'; // first player
+
+    // get the players' names saved in GameHistory:
     char* player1 = gameHistory->player_1;
     char* player2 = gameHistory->player_2;
     char* nextPlayer = player1;
     char* previousPlayer=NULL;
+    char token = 'X'; // first player's token
 
+    // for every move taken:
     for (int i = 0; i < movesCount; i++) {
+
+        // get the move:
         int move = tempGame->data;
-        int offset = move - 1;
+        int offset = move - 1; // column number to index 
 
         printf(" Player %s move: token %c to column %d \n", nextPlayer, token, move);
 
-        // starting from the bottom of the specified column
+        // make a move: check starting from the bottom of the specified column for space
         // offset to move to the next element in the column and minus 7 because there are 7 columns:
         for (int n = 35 + offset; n > 0; n = n - 7) {
 
@@ -185,8 +211,9 @@ void replayGame(struct GameHistory *gameHistory) {
             }
         }
         printBoard(board);
+        
+        // save previous player and then swap players:
         previousPlayer = nextPlayer;
-        // swap players:
         if (token == 'X') {
             token = 'O';
             nextPlayer = player2;
@@ -195,8 +222,11 @@ void replayGame(struct GameHistory *gameHistory) {
             token = 'X';
             nextPlayer = player1;
         }
+        // move to the next link(move):
         tempGame = tempGame->link;
     }
+
+    // check who won:
     char win = checkWin(board);
     if (win == '-') {
         printf("Game over! It's a draw!");
@@ -206,26 +236,32 @@ void replayGame(struct GameHistory *gameHistory) {
     }
 }
 
+/*
+    Given a pointer to a GameHistory struct, gameHistory() method lists all available past games for the user to choose from
+    Once the user chooses a game to replay, it calls replayGame() method
+    Parameters: struct GameHistory *history - a pointer to a GameHistory struct containind past games(or empty) to be listed
+*/
 void gameHistory(struct GameHistory* history) {
     printf("\n Game History: \n");
 
+    // if there are no previous games saved:
     if (history == NULL) {
         printf(" No game history found.\n");
         return;
     }
 
-    int count = 1;
-    int gameCount = countHistory(history);
+    int count = 1; // for the list 
+    int gameCount = countHistory(history); // count how many games there were
     struct GameHistory* tempHistory;
     tempHistory = history;
+
     // while the pointer to the next element is not empty:
     while (tempHistory != NULL)
     {
+        // print the list:
         printf(" %d. %s vs %s \n", count, tempHistory->player_1, tempHistory->player_2);
-        // print the stored moves:
-        //printf("Moves: \n");
-        //displayLinkedList(history->gameMovesList);
-        // point to the next element:
+
+        // point to the next game:
         tempHistory = tempHistory->next;
         count++;
     }
@@ -236,15 +272,18 @@ void gameHistory(struct GameHistory* history) {
     int userChoice = -1;
     int temp;
 
+    // ask a user to choose a game to replay or press 0 to exit:
     while (userChoice < 0) {
         printf("\n Your choice: ");
         while ((temp = getchar()) != EOF && temp != '\n'); // to get rid of any white characters
         scanf("%d", &userChoice);
+
+        // return to main menu:
         if (userChoice == 0) {
             return;
-        }
+        } // replay the game:
         else if (userChoice > 0 && userChoice <= gameCount) {
-            // replay game
+            
             printf("\n Game number %d replay: \n", userChoice);
 
             int i = 1;
@@ -258,7 +297,7 @@ void gameHistory(struct GameHistory* history) {
                 i++;
             }
             // display the game choose by the user:
-            displayLinkedList(chosenGame->gameMovesList);
+            displayLinkedList(chosenGame->gameMovesList); // debug
             replayGame(chosenGame);
         }
         else {
@@ -269,7 +308,11 @@ void gameHistory(struct GameHistory* history) {
 
 }
 
-
+/*
+    A method that checks if there are any moves left on the game board
+    Parameters: a pointer to a game board (char *) to be checked for available moves
+    Returns: 1 - if there is at least one move left, 0 - if there are no moves left.
+*/
 int movesLeft(char* board) {
     int len = 42;
     int spaceLeft = 0;
@@ -282,12 +325,19 @@ int movesLeft(char* board) {
     return spaceLeft;
 }
 
+/*
+    A method to check if there are any combinations on the game board that makes one of the players a winner
+    it checks if either 'X' or 'O' connects four times
+    Parameters: a pointer to a game board (char *) to be checked for winners
+    Returns: char 'X' if the player with token 'X' wins, 'O' if the player with token 'O' wins, '-' if there are no winners
+*/
 char checkWin(char* board) {
 
+    // count 'X' and 'O' that connect:
     int xCount = 0;
     int oCount = 0;
 
-    // check columns:
+    // 1. check columns:
 
     // first loop: iterate through the number of columns (7):
     for (int column = 0; column < 7; column++) {
@@ -318,14 +368,16 @@ char checkWin(char* board) {
                 }
             }
         }
+        // reset count:
         xCount = 0;
         oCount = 0;
     }
 
+    // reset count:
     xCount = 0;
     oCount = 0;
 
-    // check rows:
+    // 2. check rows:
     // loop through the entire board:
     for (int idx = 0; idx < 42; idx++) {
 
@@ -359,11 +411,11 @@ char checkWin(char* board) {
             }
         }
     }
-
+    // reset count:
     xCount = 0;
     oCount = 0;
 
-    // check diagonally up rows:
+    // 3. check diagonally up from the beginning of the rows / :
     int column = 0;
 
     // start at each row of the board,
@@ -399,11 +451,11 @@ char checkWin(char* board) {
         oCount = 0;
         column++;
     }
-
+    // reset count:
     xCount = 0;
     oCount = 0;
 
-    // check diagonally up from bottom columns:
+    // 4. check diagonally up from the bottom of columns / :
     for (int bottom = 36; bottom < 42; bottom++) {
         //check indexes diagonally up:
         for (int idx = bottom; idx >= column; idx = idx - 6) {
@@ -435,11 +487,11 @@ char checkWin(char* board) {
         oCount = 0;
         column = column + 7;
     }
-
+    // reset count:
     xCount = 0;
     oCount = 0;
 
-    // check diagonally down starting from top columns:
+    // 5. check diagonally down starting from the top of columns \ :
 
     for (int column = 0; column < 7; column++) {
         for (int idx = column; idx < 42; idx = idx + 8) {
@@ -469,11 +521,11 @@ char checkWin(char* board) {
         xCount = 0;
         oCount = 0;
     }
-
+    // reset count:
     xCount = 0;
     oCount = 0;
 
-    // check diagonally down rows:
+    // 6. check diagonally down staring from the beginning of the rows:
 
     for (int row = 7; row < 42; row = row + 7) {
         for (int idx = row; idx < 42; idx = idx + 8) {
@@ -501,6 +553,7 @@ char checkWin(char* board) {
                 }
             }
         }
+        // reset count:
         xCount = 0;
         oCount = 0;
     }
@@ -508,9 +561,11 @@ char checkWin(char* board) {
     return '-';
 }
 
-// takeTurn method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
-// returns: 0 if the move is valid and saved, 1 if the move is invalid
-// params: char *board - playing board, char token - user's token (X or O), int column - the column to where the move is being made
+/* 
+    takeTurn() method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
+    Parameters: char *board - playing board, char token - user's token ('X' or 'O'), int column - the column to where the move is being made
+    Returns: 0 if the move is valid and saved, 1 if the move is invalid
+*/
 int takeTurn(char* board, char token, int column, int computerTurn)
 {
     int invalidMove = 0;
@@ -522,12 +577,12 @@ int takeTurn(char* board, char token, int column, int computerTurn)
             printf("\n No such column. Please choose a different one.\n");
         return invalidMove;
     }
-    printf("\n Move: placed token %c into column %d\n", token, column);
+    
     int offset = column - 1;
 
     // starting from the bottom of the specified column
     // offset to move to the next element in the column and minus 7 because there are 7 columns:
-    for (int n = 35 + offset; n > 0; n = n - 7) {
+    for (int n = 35 + offset; n >= 0; n = n - 7) {
 
         // if no space left:
         if (board[n] != ' ') {
@@ -543,13 +598,21 @@ int takeTurn(char* board, char token, int column, int computerTurn)
     }
 
     // if no space left in the chosen column and if it is not a computer turn:
-    if (invalidMove && !computerTurn)
+    if (invalidMove && !computerTurn){
         printf("\n This column is full. Please choose a different one.\n");
+    }
+    if(!invalidMove){
+        printf("\n Move: placed token %c into column %d\n", token, column);
+    }
+        
 
     return invalidMove;
 }
 
-// Undo the latest move in the specified column
+/*
+    undoMove() undo the latest move in the specified column
+    Paremeters: char *board - a pointer to the game board, int column - the column number to where the move was made and to be undone
+*/
 void undoMove(char* board, int column) 
 {
 
@@ -566,7 +629,15 @@ void undoMove(char* board, int column)
     }
 }
 
-
+/*
+    game() method handles the connectFour game logic
+    Parameters:
+    struct Player *player_1 -  a pointer to Player 1
+    struct Player *player_2 -  a pointer to Player 2
+    int singleplayer - a flag that indicates if the game is singleplayer or multiplayer
+    Returns:
+    struct LinkedList* - a pointer to a LinkedList struct that contains all game moves taken during the game time
+*/
 struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer) 
 {
     // create the board and initialise it:
@@ -574,14 +645,6 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     board = initBoard();
     struct LinkedList* gameMoves;
     gameMoves = NULL;
-    /*struct Board boardStruct;
-    boardStruct.board=board;
-
-    char *col1[6];
-    populateColumns(col1, board);
-    for (int i=0; i<6; i++){
-      printf(" %c ", *col1[i]);
-    }*/
 
     // create pointers to next, previous and temporary player:
     struct Player* next_player;
@@ -708,7 +771,10 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     return gameMoves;
 }
 
-// multiplayer method - logic behind multiplayer game
+/*
+    multiplayer() method - prompts both users for their name, saves them to gameHistory, creates Player structs and calls game() method
+    Parameters: struct GameHistory** history - a struct to store game information
+*/
 void multiplayer(struct GameHistory** history) 
 {
 
@@ -728,6 +794,8 @@ void multiplayer(struct GameHistory** history)
     // ask for users' names:
 
     printf(" Player 1 name (max 20 char): ");
+    int temp;
+    while ((temp = getchar()) != EOF && temp != '\n');
     scanf("%s", p_1);
 
     // initialise player 1:
@@ -737,6 +805,7 @@ void multiplayer(struct GameHistory** history)
     player_1.isComputer = 0;
 
     printf(" Player 2 name (max 20 char): ");
+    while ((temp = getchar()) != EOF && temp != '\n');
     scanf("%s", p_2);
 
     // initialise player 2:
@@ -745,14 +814,16 @@ void multiplayer(struct GameHistory** history)
     player_2.token = 'O';
     player_2.isComputer = 0;
 
-    // document the players in game history:
-
-
+    // call game() and document the players and their moves in game history:
     gameMoves = game(&player_1, &player_2, 0);
     appendHistory(history, gameMoves, player_1.name, player_2.name);
 
 }
 
+/*
+    singlePlayer() method - prompts the user for their name, saves it to gameHistory, creates Player structs and calls game() method
+    Parameters: struct GameHistory** history - a struct to store game information
+*/
 void singlePlayer(struct GameHistory** history) 
 {
 
@@ -767,10 +838,12 @@ void singlePlayer(struct GameHistory** history)
 
     // allocate space for players' names:
     char* p_1 = (char*)malloc(sizeof(char) * 20);
+    char* computerName = (char*)malloc(sizeof(char) * 10);
 
-    // ask for users' names:
-
+    // ask for user's name:
     printf(" Player 1 name (max 20 char): ");
+    int temp;
+    while ((temp = getchar()) != EOF && temp != '\n');
     scanf("%s", p_1);
 
     // initialise player 1:
@@ -780,19 +853,21 @@ void singlePlayer(struct GameHistory** history)
     player_1.isComputer = 0;
 
     // initialise player 2:
-    char* computerName = (char*)malloc(sizeof(char) * 10);
     strcpy(computerName, "Computer\0");
     player_2.name = computerName;
     player_2.winner = 0;
     player_2.token = 'O';
     player_2.isComputer = 1;
 
+    // call game() and document the players and their moves in game history:
     gameMoves = game(&player_1, &player_2, 1);
     appendHistory(history, gameMoves, player_1.name, player_2.name);
 
 }
 
-// runMenu -  a method with a loop that displays the game menu for the user
+/* 
+    runMenu() -  a method with a loop that displays the game menu for the user
+*/
 void runMenu() {
 
     // get user's menu choice:
