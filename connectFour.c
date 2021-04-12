@@ -23,6 +23,7 @@ struct Player {
     int winner;
     char token;
     int isComputer;
+    int lastMove;
 };
 
 /*
@@ -656,6 +657,18 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     previous_player = player_2;
     tmp_player = player_2;
 
+    // ask the user if they want to undo their moves:
+    printf("\n Would you like to be able to undo your moves?\n 1 - Yes \n 2 - No \n");
+    printf("\n Your choice: ");
+    int supportUndoMoves=0;
+    int userAnswer=0;
+    int temp;
+    while ((temp = getchar()) != EOF && temp != '\n');
+    scanf("%d", &userAnswer);
+    if (userAnswer==1){
+        supportUndoMoves=1;
+    }
+
     printBoard(board);
 
     // while not game over:
@@ -680,7 +693,8 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
         }
         // if not singleplayer or the player is not a computer:
         else {
-            printf("Type in the column number: ");
+            printf("\n To make a move, type in the column number: ");
+            printf("\n Your choice: ");
             int validInput = scanf("%d", &userChoice);
 
             // validate user's input:
@@ -696,12 +710,12 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
         printBoard(board);
 
         // if the move is valid and the player is not a computer, confirm the move and swap players:
-        if (!invalidMove && next_player->isComputer == 0)
+        if (!invalidMove && next_player->isComputer == 0 && supportUndoMoves)
         {
-            printf("Confirm your move:\n");
+            printf(" Confirm your move:\n");
             printf(" 1 - Keep my move\n");
             printf(" 2 - Undo my move\n");
-            printf("Your choice: ");
+            printf(" Your choice: ");
             int confirmMove = 0;
 
             while (!confirmMove) {
@@ -718,6 +732,7 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
                 switch (confirmMove) {
                 case 1:
                     // keep playing
+                    next_player->lastMove=userChoice;
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
@@ -740,6 +755,15 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             next_player = previous_player;
             previous_player = tmp_player;
             appendLinkedList(&gameMoves, randNumber); // save computer's move
+        } // if the move is valid and undo moves are not supported:
+        else if (!invalidMove && !supportUndoMoves)
+        {
+            // swap the players and save the move:
+            next_player->lastMove=userChoice;
+            tmp_player = next_player;
+            next_player = previous_player;
+            previous_player = tmp_player;
+            appendLinkedList(&gameMoves, userChoice);
         }
 
         // check if there are any moves left:
