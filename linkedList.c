@@ -3,11 +3,14 @@
 #include "LinkedList.h"
 
 /*
-	Library file for LinkedList methods
+	LinkedList methods source file
 */
 
 
-// display all elements from a LinkedList:
+/*
+  Prints the elements of LinkedList
+  Parameters: struct LinkedList *list -  a pointer to the list to be displayed
+*/
 void displayLinkedList(struct LinkedList* list)
 {
     // while the pointer to the next element is not empty:
@@ -21,9 +24,13 @@ void displayLinkedList(struct LinkedList* list)
     printf("\n");
 }
 
-// Count elements in a LinkedList
-// parameter: a pointer to the first element of the LinkedList
-int count(struct LinkedList* list)
+/*
+  Counts the elements of a Linked List
+  Parameters:
+  struct LinkedList *list - a pointer to a LinkedList to be counted
+  Returns: int - number of elements
+*/
+int countLinkedList(struct LinkedList* list)
 {
     int count = 0;
 
@@ -39,12 +46,18 @@ int count(struct LinkedList* list)
 }
 
 
-// adds a new element to the end of a LinkedList
+/*
+  Adds a new element to the end of the LinkedList
+  Parameters:
+  struct LinkedList **list - a pointer to the list  
+  int num - data to be saved 
+*/
 void appendLinkedList(struct LinkedList** list, int num)
 {
     struct LinkedList* temp, * r;
-    if (*list == NULL)
+    if (*list == NULL) // if there are no elements
     {
+        // create a new element at the beginning of the list
         temp = (struct LinkedList*)malloc(sizeof(struct LinkedList));
         temp->data = num;
         temp->link = NULL;
@@ -55,9 +68,9 @@ void appendLinkedList(struct LinkedList** list, int num)
         temp = *list;
         while (temp->link != NULL)
         {
-            temp = temp->link;
+            temp = temp->link; // find the last element
         }
-
+        // add a new element at the end:
         r = (struct LinkedList*)malloc(sizeof(struct LinkedList));
         r->data = num;
         r->link = NULL;
@@ -65,8 +78,13 @@ void appendLinkedList(struct LinkedList** list, int num)
     }
 }
 
-// deletes an element at a specified location
-void deleteAt(struct LinkedList** list, int location)
+/*
+  Deletes an element at a specified index
+  Parameters:
+  struct LinkedList ** list - a pointer to the list to be amended 
+  int location - location of the element to be deleted 
+*/
+void deleteAtLinkedList(struct LinkedList** list, int location)
 {
     struct LinkedList* temp, *r = NULL;
     temp = *list;
@@ -86,8 +104,14 @@ void deleteAt(struct LinkedList** list, int location)
     free(temp); // release the unwanted element in the middle
 }
 
-//adds a new element at after a specified location:
-void insert_after(struct LinkedList *list, int location, int num)
+/*
+  Adds a new element after the specified location
+  Parameters:
+  struct LinkedList **list - a pointer to the list
+  int location - location where the element should be added  
+  int num - data to be saved 
+*/
+void insertAfterLinkedList(struct LinkedList *list, int location, int num)
 {
   struct LinkedList *temp, *r;
   int i;
@@ -110,8 +134,14 @@ void insert_after(struct LinkedList *list, int location, int num)
   temp->link=r; // make temp point to r (instead of the next element)
 }
 
-//adds a new element befroe a specified location
-void insert_before(struct LinkedList *list, int location, int num)
+/*
+  Adds a new element before the specified location
+  Parameters:
+  struct LinkedList **list - a pointer to the list
+  int location - location where the element should be added  
+  int num - data to be saved 
+*/
+void insertBeforeLinkedList(struct LinkedList *list, int location, int num)
 {
   struct LinkedList *temp, *r;
   int i;

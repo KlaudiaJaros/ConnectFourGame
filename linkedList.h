@@ -4,6 +4,9 @@
 	Header file for LinkedList struct and LinkedList methods' declarations
 */
 
+/*
+    Struct to store LinkedList element containg data and a pointer to the next element
+*/
 struct LinkedList {
     int data;
     struct LinkedList* link;
@@ -12,15 +15,15 @@ struct LinkedList {
 
 void displayLinkedList(struct LinkedList* list);
 
-int count(struct LinkedList* list);
+int countLinkedList(struct LinkedList* list);
 
 void appendLinkedList(struct LinkedList** list, int num);
 
-void deleteAt(struct LinkedList** list, int location);
+void deleteAtLinkedList(struct LinkedList** list, int location);
 
-void insert_after(struct LinkedList *list, int location, int num);
+void insertAfterLinkedList(struct LinkedList *list, int location, int num);
 
-void insert_before(struct LinkedList *list, int location, int num);
+void insertBeforeLinkedList(struct LinkedList *list, int location, int num);
 
 
 

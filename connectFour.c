@@ -14,6 +14,7 @@
 #include <time.h>
 #include "linkedList.h"
 #include "connectFour.h"
+#include "doublyLinkedList.h"
 
 /*
     Player struct to store information about the player
@@ -30,21 +31,21 @@ struct Player {
     GameHistory struct (linked list) to store information about past games
 */
 struct GameHistory {
-    struct LinkedList* gameMovesList;
+    struct DoublyLinked* gameMovesList;
     struct GameHistory* next;
-    char* player_1;
-    char* player_2;
+    struct Player* player_1;
+    struct Player* player_2;
 };
 
-/* 
+/*
     appendHistory() - adds a new GameHistory element to the end of a GameHistory list
     Parameters:
-    struct GameHistory** history - a pointer to a GameHistory to be appended 
+    struct GameHistory** history - a pointer to a GameHistory to be appended
     struct LinkedList* list - a pointer to a list of moves that were taken in a game to be stored in GameHistory
     char* player_1 - a pointer to player 1 name
     char* player_2 - a pointer to player 2 name
 */
-void appendHistory(struct GameHistory** history, struct LinkedList* list, char* player_1, char* player_2)
+void appendHistory(struct GameHistory** history, struct DoublyLinked* list, struct Player* player_1, struct Player* player_2)
 {
     struct GameHistory* temp, * r;
     // if history is null, just add the first element:
@@ -100,7 +101,7 @@ int countHistory(struct GameHistory* list)
   initBoard() - initialises the board for the game
   Returns: a char pointer to the initialised board
 */
-char* initBoard() 
+char* initBoard()
 {
     // allocate space for the board:
     char* board = (char*)malloc(sizeof(char) * 42);
@@ -144,7 +145,7 @@ void printBoard(char* board)
 /*
   printMenu() - a void function that prints the application's menu
 */
-void printMenu() 
+void printMenu()
 {
 
     printf("\n ----------------------------");
@@ -168,36 +169,48 @@ void settings() {
     Given a pointer to a GameHistory struct, replayGame() method replays the game for the user.
     Parameters: struct GameHistory *gameHistory - a pointer to a game history to be replayed
 */
-void replayGame(struct GameHistory *gameHistory) {
+void replayGame(struct GameHistory* gameHistory) {
 
     // get the list of moves played in the game:
-    struct LinkedList* tempGame;
+    struct DoublyLinked* tempGame;
     tempGame = gameHistory->gameMovesList;
-    int movesCount = count(tempGame);
+    int movesCount = countDoublyLinked(tempGame);
 
     // initialise the board for the game:
     char* board;
     board = initBoard();
 
     // get the players' names saved in GameHistory:
-    char* player1 = gameHistory->player_1;
-    char* player2 = gameHistory->player_2;
-    char* nextPlayer = player1;
-    char* previousPlayer=NULL;
-    char token = 'X'; // first player's token
+    struct Player* player1 = gameHistory->player_1;
+    struct Player* player2 = gameHistory->player_2;
+    struct Player* nextPlayer = player1;
+    struct Player* previousPlayer = NULL;
 
     // for every move taken:
     for (int i = 0; i < movesCount; i++) {
 
         // get the move:
         int move = tempGame->data;
-        int offset = move - 1; // column number to index 
+        //int offset = move - 1; // column number to index 
 
-        printf(" Player %s move: token %c to column %d \n", nextPlayer, token, move);
+        // check who is making the move:
+        if (tempGame->token == 'X') {
+            nextPlayer = player1;
+        }
+        else {
+            nextPlayer = player2;
+        }
+
+        int column = -1;
+        for (int n = move; n >= 0; n = n - 7) {
+            column = n + 1;
+        }
+
+        printf(" Player %s move: token %c to column %d \n", nextPlayer->name, nextPlayer->token, column);
 
         // make a move: check starting from the bottom of the specified column for space
         // offset to move to the next element in the column and minus 7 because there are 7 columns:
-        for (int n = 35 + offset; n > 0; n = n - 7) {
+       /* for (int n = 35 + offset; n > 0; n = n - 7) {
 
             // if the space is taken:
             if (board[n] != ' ') {
@@ -210,21 +223,18 @@ void replayGame(struct GameHistory *gameHistory) {
                 board[n] = token;
                 break;
             }
+        }*/
+        if (board[move] == ' ') {
+            // save the move:
+            board[move] = nextPlayer->token;
         }
         printBoard(board);
-        
-        // save previous player and then swap players:
+
+        // save previous player:
         previousPlayer = nextPlayer;
-        if (token == 'X') {
-            token = 'O';
-            nextPlayer = player2;
-        }
-        else {
-            token = 'X';
-            nextPlayer = player1;
-        }
+
         // move to the next link(move):
-        tempGame = tempGame->link;
+        tempGame = tempGame->next;
     }
 
     // check who won:
@@ -233,7 +243,7 @@ void replayGame(struct GameHistory *gameHistory) {
         printf("Game over! It's a draw!");
     }
     else if (win == 'X' || win == 'O') {
-        printf("\n Game over! Player %s wins\n", previousPlayer);
+        printf("\n Game over! Player %s wins\n", previousPlayer->name);
     }
 }
 
@@ -242,9 +252,9 @@ void replayGame(struct GameHistory *gameHistory) {
     Once the user chooses a game to replay, it calls replayGame() method
     Parameters: struct GameHistory *history - a pointer to a GameHistory struct containind past games(or empty) to be listed
 */
-void gameHistory(struct GameHistory* history) {
+void gameHistory(struct GameHistory** gameHistory) {
     printf("\n Game History: \n");
-
+    struct GameHistory* history = *gameHistory;
     // if there are no previous games saved:
     if (history == NULL) {
         printf(" No game history found.\n");
@@ -260,7 +270,7 @@ void gameHistory(struct GameHistory* history) {
     while (tempHistory != NULL)
     {
         // print the list:
-        printf(" %d. %s vs %s \n", count, tempHistory->player_1, tempHistory->player_2);
+        printf(" %d. %s vs %s \n", count, tempHistory->player_1->name, tempHistory->player_2->name);
 
         // point to the next game:
         tempHistory = tempHistory->next;
@@ -284,11 +294,11 @@ void gameHistory(struct GameHistory* history) {
             return;
         } // replay the game:
         else if (userChoice > 0 && userChoice <= gameCount) {
-            
+
             printf("\n Game number %d replay: \n", userChoice);
 
             int i = 1;
-            struct GameHistory *tempGame, *chosenGame = NULL;
+            struct GameHistory* tempGame, * chosenGame = NULL;
             tempGame = history;
 
             // find the game choosen by the user:
@@ -298,7 +308,7 @@ void gameHistory(struct GameHistory* history) {
                 i++;
             }
             // display the game choose by the user:
-            displayLinkedList(chosenGame->gameMovesList); // debug
+            displayDoublyLinked(chosenGame->gameMovesList); // debug
             replayGame(chosenGame);
         }
         else {
@@ -562,13 +572,15 @@ char checkWin(char* board) {
     return '-';
 }
 
-/* 
+/*
     takeTurn() method deals with the logic of making a move, it checks if the move is valid, if yes, it saves it
     Parameters: char *board - playing board, char token - user's token ('X' or 'O'), int column - the column to where the move is being made
     Returns: 0 if the move is valid and saved, 1 if the move is invalid
 */
-int takeTurn(char* board, char token, int column, int computerTurn)
+int takeTurn(char* board, struct Player** nextPlayer, struct DoublyLinked** moves, int column, int computerTurn)
 {
+    struct Player* player = *nextPlayer;
+    char token = player->token;
     int invalidMove = 0;
     if (column > 7 || column < 1)
     {
@@ -578,7 +590,7 @@ int takeTurn(char* board, char token, int column, int computerTurn)
             printf("\n No such column. Please choose a different one.\n");
         return invalidMove;
     }
-    
+
     int offset = column - 1;
 
     // starting from the bottom of the specified column
@@ -594,18 +606,20 @@ int takeTurn(char* board, char token, int column, int computerTurn)
             invalidMove = 0;
             // save the move:
             board[n] = token;
+            appendDoublyLinked(moves, n, token);
+            player->lastMove = n;
             break;
         }
     }
 
     // if no space left in the chosen column and if it is not a computer turn:
-    if (invalidMove && !computerTurn){
+    if (invalidMove && !computerTurn) {
         printf("\n This column is full. Please choose a different one.\n");
     }
-    if(!invalidMove){
+    if (!invalidMove) {
         printf("\n Move: placed token %c into column %d\n", token, column);
     }
-        
+
 
     return invalidMove;
 }
@@ -614,20 +628,33 @@ int takeTurn(char* board, char token, int column, int computerTurn)
     undoMove() undo the latest move in the specified column
     Paremeters: char *board - a pointer to the game board, int column - the column number to where the move was made and to be undone
 */
-void undoMove(char* board, int column) 
+void undoMove(char* board, struct Player** player, struct DoublyLinked** moves)
 {
 
-    int offset = column - 1; // offset to move to the specified column only
+    /*
+        int offset = column - 1; // offset to move to the specified column only
 
-    // starting from the top of the column
-    // plus 7 to move to the next element in the column, because there are 7 columns:
-    for (int n = offset; n < 42; n = n + 7) {
-        // erase the latest move in that column:
-        if (board[n] != ' ') {
-            board[n] = ' ';
-            break;
+        // starting from the top of the column
+        // plus 7 to move to the next element in the column, because there are 7 columns:
+        for (int n = offset; n < 42; n = n + 7) {
+            // erase the latest move in that column:
+            if (board[n] != ' ') {
+                board[n] = ' ';
+                break;
+            }
         }
-    }
+        */
+    struct Player* lastPlayer = *player;
+
+    // based on the user's last move, delete it from the board and game moves history:
+    int lastMove = lastPlayer->lastMove;
+    board[lastMove] = ' ';
+    deleteDoublyLinked(moves, lastMove);
+
+    // amend the player's last move:
+    char token = lastPlayer->token;
+    int newLastMove = findLastMove(*moves, token);
+    lastPlayer->lastMove = newLastMove;
 }
 
 /*
@@ -639,12 +666,12 @@ void undoMove(char* board, int column)
     Returns:
     struct LinkedList* - a pointer to a LinkedList struct that contains all game moves taken during the game time
 */
-struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer) 
+struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int singleplayer)
 {
     // create the board and initialise it:
     char* board;
     board = initBoard();
-    struct LinkedList* gameMoves;
+    struct DoublyLinked* gameMoves;
     gameMoves = NULL;
 
     // create pointers to next, previous and temporary player:
@@ -660,13 +687,13 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     // ask the user if they want to undo their moves:
     printf("\n Would you like to be able to undo your moves?\n 1 - Yes \n 2 - No \n");
     printf("\n Your choice: ");
-    int supportUndoMoves=0;
-    int userAnswer=0;
+    int supportUndoMoves = 0;
+    int userAnswer = 0;
     int temp;
     while ((temp = getchar()) != EOF && temp != '\n');
     scanf("%d", &userAnswer);
-    if (userAnswer==1){
-        supportUndoMoves=1;
+    if (userAnswer == 1) {
+        supportUndoMoves = 1;
     }
 
     printBoard(board);
@@ -688,12 +715,12 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             while (invalidMove) {
                 srand(time(0));
                 randNumber = rand() % 7;
-                invalidMove = takeTurn(board, next_player->token, randNumber, 1);
+                invalidMove = takeTurn(board, &next_player, &gameMoves, randNumber, 1);
             }
         }
         // if not singleplayer or the player is not a computer:
         else {
-            printf("\n To make a move, type in the column number: ");
+            printf("\n To make a move, type in the column number or 0 if you want to undo your last move: ");
             printf("\n Your choice: ");
             int validInput = scanf("%d", &userChoice);
 
@@ -704,13 +731,29 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
                 printf("\n Incorrect input. Please choose a valid column: ");
                 validInput = scanf("%d", &userChoice);
             }
-            invalidMove = takeTurn(board, next_player->token, userChoice, 0);
+            if (userChoice == 0) {
+
+                if (next_player->lastMove == -1) {
+                    printf("\n No moves to undo. \n");
+                }
+                else {
+                    //undo the move:
+                    undoMove(board, &next_player, &gameMoves);
+                    //board[next_player->lastMove]=' ';
+                    //deleteDoublyLinked(&gameMoves, next_player->lastMove);
+                    tmp_player = next_player;
+                    next_player = previous_player;
+                    previous_player = tmp_player;
+                }
+            }
+            else
+                invalidMove = takeTurn(board, &next_player, &gameMoves, userChoice, 0);
         }
 
         printBoard(board);
 
         // if the move is valid and the player is not a computer, confirm the move and swap players:
-        if (!invalidMove && next_player->isComputer == 0 && supportUndoMoves)
+        if (!invalidMove && next_player->isComputer == 0 && supportUndoMoves && userChoice != 0)
         {
             printf(" Confirm your move:\n");
             printf(" 1 - Keep my move\n");
@@ -732,16 +775,20 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
                 switch (confirmMove) {
                 case 1:
                     // keep playing
-                    next_player->lastMove=userChoice;
+                    //next_player->lastMove=userChoice;
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
-                    appendLinkedList(&gameMoves, userChoice); // save the user's move
+                    //appendDoublyLinked(&gameMoves, userChoice); // save the user's move
                     break;
                 case 2:
                     //undo the move:
-                    undoMove(board, userChoice);
-                    printBoard(board);
+                    undoMove(board, &next_player, &gameMoves);
+                    //board[next_player->lastMove]=' ';
+                    //deleteDoublyLinked(&gameMoves, next_player->lastMove);
+                    tmp_player = next_player;
+                    next_player = previous_player;
+                    previous_player = tmp_player;
                     break;
                 default:
                     confirmMove = 0;
@@ -754,17 +801,19 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
             tmp_player = next_player;
             next_player = previous_player;
             previous_player = tmp_player;
-            appendLinkedList(&gameMoves, randNumber); // save computer's move
+            //appendDoublyLinked(&gameMoves, randNumber); // save computer's move
         } // if the move is valid and undo moves are not supported:
         else if (!invalidMove && !supportUndoMoves)
         {
             // swap the players and save the move:
-            next_player->lastMove=userChoice;
+            //next_player->lastMove=userChoice;
             tmp_player = next_player;
             next_player = previous_player;
             previous_player = tmp_player;
-            appendLinkedList(&gameMoves, userChoice);
+            //appendDoublyLinked(&gameMoves, userChoice);
         }
+
+        displayDoublyLinked(gameMoves);
 
         // check if there are any moves left:
         char win = checkWin(board);
@@ -799,16 +848,18 @@ struct LinkedList* game(struct Player* player_1, struct Player* player_2, int si
     multiplayer() method - prompts both users for their name, saves them to gameHistory, creates Player structs and calls game() method
     Parameters: struct GameHistory** history - a struct to store game information
 */
-void multiplayer(struct GameHistory** history) 
+void multiplayer(struct GameHistory** history)
 {
 
     printf("\n Multiplayer game: \n\n");
 
     // define players:
-    struct Player player_1, player_2;
+    struct Player* player_1, * player_2;
+    player_1 = (struct Player*)malloc(sizeof(struct Player));
+    player_2 = (struct Player*)malloc(sizeof(struct Player));
 
     // save moves:
-    struct LinkedList* gameMoves;
+    struct DoublyLinked* gameMoves;
     gameMoves = NULL;
 
     // allocate space for players' names:
@@ -823,24 +874,26 @@ void multiplayer(struct GameHistory** history)
     scanf("%s", p_1);
 
     // initialise player 1:
-    player_1.name = p_1;
-    player_1.winner = 0;
-    player_1.token = 'X';
-    player_1.isComputer = 0;
+    player_1->name = p_1;
+    player_1->winner = 0;
+    player_1->token = 'X';
+    player_1->isComputer = 0;
+    player_1->lastMove = -1;
 
     printf(" Player 2 name (max 20 char): ");
     while ((temp = getchar()) != EOF && temp != '\n');
     scanf("%s", p_2);
 
     // initialise player 2:
-    player_2.name = p_2;
-    player_2.winner = 0;
-    player_2.token = 'O';
-    player_2.isComputer = 0;
+    player_2->name = p_2;
+    player_2->winner = 0;
+    player_2->token = 'O';
+    player_2->isComputer = 0;
+    player_2->lastMove = -1;
 
     // call game() and document the players and their moves in game history:
-    gameMoves = game(&player_1, &player_2, 0);
-    appendHistory(history, gameMoves, player_1.name, player_2.name);
+    gameMoves = game(player_1, player_2, 0);
+    appendHistory(history, gameMoves, player_1, player_2);
 
 }
 
@@ -848,16 +901,18 @@ void multiplayer(struct GameHistory** history)
     singlePlayer() method - prompts the user for their name, saves it to gameHistory, creates Player structs and calls game() method
     Parameters: struct GameHistory** history - a struct to store game information
 */
-void singlePlayer(struct GameHistory** history) 
+void singlePlayer(struct GameHistory** history)
 {
 
     printf("\n Singleplayer game: \n\n");
 
     // define players:
-    struct Player player_1, player_2;
+    struct Player *player_1, *player_2;
+    player_1 = (struct Player*)malloc(sizeof(struct Player));
+    player_2 = (struct Player*)malloc(sizeof(struct Player));
 
     // save moves:
-    struct LinkedList* gameMoves;
+    struct DoublyLinked* gameMoves;
     gameMoves = NULL;
 
     // allocate space for players' names:
@@ -871,25 +926,26 @@ void singlePlayer(struct GameHistory** history)
     scanf("%s", p_1);
 
     // initialise player 1:
-    player_1.name = p_1;
-    player_1.winner = 0;
-    player_1.token = 'X';
-    player_1.isComputer = 0;
+    player_1->name = p_1;
+    player_1->winner = 0;
+    player_1->token = 'X';
+    player_1->isComputer = 0;
+    player_1->lastMove = -1;
 
     // initialise player 2:
     strcpy(computerName, "Computer\0");
-    player_2.name = computerName;
-    player_2.winner = 0;
-    player_2.token = 'O';
-    player_2.isComputer = 1;
+    player_2->name = computerName;
+    player_2->winner = 0;
+    player_2->token = 'O';
+    player_2->isComputer = 1;
 
     // call game() and document the players and their moves in game history:
-    gameMoves = game(&player_1, &player_2, 1);
-    appendHistory(history, gameMoves, player_1.name, player_2.name);
+    gameMoves = game(player_1, player_2, 1);
+    appendHistory(history, gameMoves, player_1, player_2);
 
 }
 
-/* 
+/*
     runMenu() -  a method with a loop that displays the game menu for the user
 */
 void runMenu() {
@@ -935,7 +991,7 @@ void runMenu() {
             break;
         case 3:
             //gettingChoice = 0;
-            gameHistory(history);
+            gameHistory(&history);
             break;
         case 4:
             //gettingChoice = 0;

@@ -18,20 +18,20 @@ char checkWin(char* board);
 
 int movesLeft(char* board);
 
-int takeTurn(char* board, char token, int column, int computerTurn);
+int takeTurn(char* board, struct Player **nextPlayer, struct DoublyLinked **moves, int column, int computerTurn);
 
-void undoMove(char* board, int column);
+void undoMove(char* board, struct Player **player , struct DoublyLinked **moves) ;
 
-struct LinkedList* game(struct Player* player_1, struct Player* player_2, int singleplayer);
+struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int singleplayer);
 
 void multiplayer(struct GameHistory** history);
 
 void singlePlayer(struct GameHistory** history);
 
-void appendHistory(struct GameHistory** history, struct LinkedList* list, char* player_1, char* player_2);
+void appendHistory(struct GameHistory** history, struct DoublyLinked* list, struct Player* player_1, struct Player* player_2);
 
 int countHistory(struct GameHistory* list);
 
 void replayGame(struct GameHistory *gameHistory);
 
-void gameHistory(struct GameHistory* history);
+void gameHistory(struct GameHistory** history);

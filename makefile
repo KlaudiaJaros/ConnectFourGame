@@ -1,9 +1,9 @@
 
 install:
-	cl connectFour.c linkedList.c
-	cl /c linkedList.c
-	lib linkedList.obj
-	link connectFour.obj linkedList.lib
+	cl connectFour.c linkedList.c doublyLinkedList.c
+	cl /c linkedList.c doublyLinkedList.c
+	lib linkedList.obj doublyLinkedList.obj
+	link connectFour.obj linkedList.lib 
 
 delete:
 	del *.c *.obj *.exe *.lib
