@@ -3,7 +3,7 @@
 
   ConnectFour -  a command line game written in C based on the popular Connect Four
   board game. The application allows the user to choose between single player and
-  multiplayer mode, adjust the board size and view previous games.
+  multiplayer mode and view previous games.
 
 */
 
@@ -208,22 +208,6 @@ void replayGame(struct GameHistory* gameHistory) {
 
         printf(" Player %s move: token %c to column %d \n", nextPlayer->name, nextPlayer->token, column);
 
-        // make a move: check starting from the bottom of the specified column for space
-        // offset to move to the next element in the column and minus 7 because there are 7 columns:
-       /* for (int n = 35 + offset; n > 0; n = n - 7) {
-
-            // if the space is taken:
-            if (board[n] != ' ') {
-                continue;
-            }
-            // if there is space:
-            else if (board[n] == ' ') {
-
-                // save the move:
-                board[n] = token;
-                break;
-            }
-        }*/
         if (board[move] == ' ') {
             // save the move:
             board[move] = nextPlayer->token;
@@ -630,20 +614,6 @@ int takeTurn(char* board, struct Player** nextPlayer, struct DoublyLinked** move
 */
 void undoMove(char* board, struct Player** player, struct DoublyLinked** moves)
 {
-
-    /*
-        int offset = column - 1; // offset to move to the specified column only
-
-        // starting from the top of the column
-        // plus 7 to move to the next element in the column, because there are 7 columns:
-        for (int n = offset; n < 42; n = n + 7) {
-            // erase the latest move in that column:
-            if (board[n] != ' ') {
-                board[n] = ' ';
-                break;
-            }
-        }
-        */
     struct Player* lastPlayer = *player;
 
     // based on the user's last move, delete it from the board and game moves history:
@@ -739,8 +709,6 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                 else {
                     //undo the move:
                     undoMove(board, &next_player, &gameMoves);
-                    //board[next_player->lastMove]=' ';
-                    //deleteDoublyLinked(&gameMoves, next_player->lastMove);
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
@@ -752,7 +720,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
 
         printBoard(board);
 
-        // if the move is valid and the player is not a computer, confirm the move and swap players:
+        // if the move is valid and the player is not a computer, confirm the move and swap players or undo move:
         if (!invalidMove && next_player->isComputer == 0 && supportUndoMoves && userChoice != 0)
         {
             printf(" Confirm your move:\n");
@@ -764,28 +732,18 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
             while (!confirmMove) {
                 // validate user's input:
                 int validInput = scanf("%d", &confirmMove);
-                /*while (validInput != 1) {
-                    int temp;
-                    while ((temp = getchar()) != EOF && temp != '\n');
-                    printf("\n Incorrect input. Please choose a valid option: ");
-                    validInput = scanf("%d", &confirmMove);
-                }*/
 
                 // based on user input:
                 switch (confirmMove) {
                 case 1:
                     // keep playing
-                    //next_player->lastMove=userChoice;
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
-                    //appendDoublyLinked(&gameMoves, userChoice); // save the user's move
                     break;
                 case 2:
                     //undo the move:
                     undoMove(board, &next_player, &gameMoves);
-                    //board[next_player->lastMove]=' ';
-                    //deleteDoublyLinked(&gameMoves, next_player->lastMove);
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
@@ -796,24 +754,15 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                 }
             }
             printf("\n");
-        } // if the move is valid and the player is a computer, just swap players:
-        else if (!invalidMove && next_player->isComputer == 1) {
+        } // if the move is valid swap players:
+        else if (!invalidMove) {
             tmp_player = next_player;
             next_player = previous_player;
             previous_player = tmp_player;
-            //appendDoublyLinked(&gameMoves, randNumber); // save computer's move
-        } // if the move is valid and undo moves are not supported:
-        else if (!invalidMove && !supportUndoMoves)
-        {
-            // swap the players and save the move:
-            //next_player->lastMove=userChoice;
-            tmp_player = next_player;
-            next_player = previous_player;
-            previous_player = tmp_player;
-            //appendDoublyLinked(&gameMoves, userChoice);
-        }
 
-        displayDoublyLinked(gameMoves);
+        } 
+
+        displayDoublyLinked(gameMoves); // debug
 
         // check if there are any moves left:
         char win = checkWin(board);
@@ -826,11 +775,13 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
         // if the winner is X:
         else if (win == 'X') {
             gameOver = 1;
+            player_1->winner=1;
             printf(" Player %s wins!", player_1->name);
         }
         // if the winner is O:
         else if (win == 'O') {
             gameOver = 1;
+            player_1->winner=1;
             printf(" Player %s wins!", player_2->name);
         }
         // if there are no moves left:
@@ -839,7 +790,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
             printf(" It's a draw!");
         }
     }
-    //displayLinkedList(gameMoves); // debug
+
     printf("\n");
     return gameMoves;
 }
@@ -946,7 +897,7 @@ void singlePlayer(struct GameHistory** history)
 }
 
 /*
-    runMenu() -  a method with a loop that displays the game menu for the user
+    A method with a loop that displays the game menu for the user and asks for user's choice
 */
 void runMenu() {
 
@@ -978,23 +929,15 @@ void runMenu() {
         // call the right method based on user's choice:
         switch (userChoice) {
         case 1:
-            //gettingChoice = 0;
-
             singlePlayer(&history);
-            //gameMoves = singlePlayer();
-            //appendHistory(&history, gameMoves);
-
             break;
         case 2:
-            //gettingChoice = 0;
             multiplayer(&history);
             break;
         case 3:
-            //gettingChoice = 0;
             gameHistory(&history);
             break;
         case 4:
-            //gettingChoice = 0;
             settings();
             break;
         case 5:
