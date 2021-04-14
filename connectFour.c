@@ -640,7 +640,7 @@ void undoMove(char* board, struct Player** player, struct DoublyLinked** moves, 
     struct DoublyLinked** moves - list of moves
     struct DoublyLinked** undoneMoves - list of undone moves
     Returns:
-    int 0 if no moves to redo
+    int 0 if no moves to redo or move taken
     int 1 if move was redone
 */
 int redoMove(char* board, struct Player** player, struct DoublyLinked** moves, struct DoublyLinked** undoneMoves)
@@ -650,16 +650,24 @@ int redoMove(char* board, struct Player** player, struct DoublyLinked** moves, s
     char token = lastPlayer->token;
     int undoneMove = findLastMove(*undoneMoves, token); // find the move
     if (undoneMove==-1){
+        printf("\n No moves to redo. \n");
         return 0;
     }
     deleteDoublyLinked(undoneMoves, undoneMove); // delete the undone move from the list
 
-    // save the move:
-    board[undoneMove]=token;
-    appendDoublyLinked(moves, undoneMove, token);
-    lastPlayer->lastMove=undoneMove;
+    // save the move if the space is not occupied:
+    if(board[undoneMove]==' '){
+        board[undoneMove]=token;
+        appendDoublyLinked(moves, undoneMove, token);
+        lastPlayer->lastMove=undoneMove;
+        return 1;
+    }
+    else{
+        printf("\n Unable to redo the move. Space already occupied. \n");
+        return 0;
+    }
 
-    return 1;
+
 }
 
 /*
@@ -694,7 +702,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
     tmp_player = player_2;
 
     // ask the user if they want to undo their moves:
-    printf("\n Would you like to be able to undo your moves?\n 1 - Yes \n 2 - No \n");
+    printf("\n Would you like to play in the assisted mode? Assisted mode allows you to undo, redo and confirm your moves. Great for beginners!\n 1 - Yes \n 2 - No \n");
     printf("\n Your choice: ");
     int supportUndoMoves = 0;
     int userAnswer = 0;
@@ -729,7 +737,13 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
         }
         // if not singleplayer or the player is not a computer:
         else {
-            printf("\n To make a move, type in the column number \n or 0 if you want to undo your last move\n or 9 if you want to redo your undone move ");
+            if (supportUndoMoves){
+                printf("\n To make a move, type in the column number \n or 0 if you want to undo your last move\n or 9 if you want to redo your undone move ");
+            }
+            else {
+                printf("\n To make a move, type in the column number \n");
+            }
+
             printf("\n Your choice: ");
             int validInput = scanf("%d", &userChoice);
 
@@ -740,7 +754,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                 printf("\n Incorrect input. Please choose a valid column: ");
                 validInput = scanf("%d", &userChoice);
             }
-            if (userChoice == 0) {
+            if (userChoice == 0 && supportUndoMoves) {
 
                 if (next_player->lastMove == -1) {
                     printf("\n No moves to undo. \n");
@@ -753,20 +767,12 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                     previous_player = tmp_player;
                 }
             }
-            else if(userChoice==9){
-                if (countDoublyLinked(undoneMoves)==0){
-                    printf("\n No moves to redo. \n");
-                }
-                else{
-                    int moveRedone = redoMove(board, &next_player, &gameMoves, &undoneMoves);
-                    if(moveRedone==0){
-                        printf("\n No moves to redo. \n");
-                    }
-                    else{
-                        tmp_player = next_player;
-                        next_player = previous_player;
-                        previous_player = tmp_player;
-                    }
+            else if(userChoice==9 && supportUndoMoves){
+                int moveRedone = redoMove(board, &next_player, &gameMoves, &undoneMoves);
+                if(moveRedone==1){
+                    tmp_player = next_player;
+                    next_player = previous_player;
+                    previous_player = tmp_player;
                 }
             }
             else
