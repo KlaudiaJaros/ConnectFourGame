@@ -191,7 +191,7 @@ void replayGame(struct GameHistory* gameHistory) {
 
         // get the move:
         int move = tempGame->data;
-        //int offset = move - 1; // column number to index 
+        //int offset = move - 1; // column number to index
 
         // check who is making the move:
         if (tempGame->token == 'X') {
@@ -245,7 +245,7 @@ void gameHistory(struct GameHistory** gameHistory) {
         return;
     }
 
-    int count = 1; // for the list 
+    int count = 1; // for the list
     int gameCount = countHistory(history); // count how many games there were
     struct GameHistory* tempHistory;
     tempHistory = history;
@@ -610,9 +610,12 @@ int takeTurn(char* board, struct Player** nextPlayer, struct DoublyLinked** move
 
 /*
     undoMove() undo the latest move in the specified column
-    Paremeters: char *board - a pointer to the game board, int column - the column number to where the move was made and to be undone
+    Paremeters: char *board - a pointer to the game board
+    struct Player** player -  the player who undoes the move
+    struct DoublyLinked** moves - list of moves
+    struct DoublyLinked** undoneMoves - list of undone moves
 */
-void undoMove(char* board, struct Player** player, struct DoublyLinked** moves)
+void undoMove(char* board, struct Player** player, struct DoublyLinked** moves, struct DoublyLinked** undoneMoves)
 {
     struct Player* lastPlayer = *player;
 
@@ -621,10 +624,42 @@ void undoMove(char* board, struct Player** player, struct DoublyLinked** moves)
     board[lastMove] = ' ';
     deleteDoublyLinked(moves, lastMove);
 
-    // amend the player's last move:
+    // save the undone move:
     char token = lastPlayer->token;
+    appendDoublyLinked(undoneMoves, lastMove, token);
+
+    // amend the player's last move:
     int newLastMove = findLastMove(*moves, token);
     lastPlayer->lastMove = newLastMove;
+}
+
+/*
+    redoMove() redo the latest undone move
+    Paremeters: char *board - a pointer to the game board
+    struct Player** player -  the player who redoes the move
+    struct DoublyLinked** moves - list of moves
+    struct DoublyLinked** undoneMoves - list of undone moves
+    Returns:
+    int 0 if no moves to redo
+    int 1 if move was redone
+*/
+int redoMove(char* board, struct Player** player, struct DoublyLinked** moves, struct DoublyLinked** undoneMoves)
+{
+    struct Player* lastPlayer = *player;
+
+    char token = lastPlayer->token;
+    int undoneMove = findLastMove(*undoneMoves, token); // find the move
+    if (undoneMove==-1){
+        return 0;
+    }
+    deleteDoublyLinked(undoneMoves, undoneMove); // delete the undone move from the list
+
+    // save the move:
+    board[undoneMove]=token;
+    appendDoublyLinked(moves, undoneMove, token);
+    lastPlayer->lastMove=undoneMove;
+
+    return 1;
 }
 
 /*
@@ -641,8 +676,12 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
     // create the board and initialise it:
     char* board;
     board = initBoard();
+
+    // track moves:
     struct DoublyLinked* gameMoves;
     gameMoves = NULL;
+    struct DoublyLinked* undoneMoves;
+    undoneMoves = NULL;
 
     // create pointers to next, previous and temporary player:
     struct Player* next_player;
@@ -690,7 +729,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
         }
         // if not singleplayer or the player is not a computer:
         else {
-            printf("\n To make a move, type in the column number or 0 if you want to undo your last move: ");
+            printf("\n To make a move, type in the column number \n or 0 if you want to undo your last move\n or 9 if you want to redo your undone move ");
             printf("\n Your choice: ");
             int validInput = scanf("%d", &userChoice);
 
@@ -708,10 +747,26 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                 }
                 else {
                     //undo the move:
-                    undoMove(board, &next_player, &gameMoves);
+                    undoMove(board, &next_player, &gameMoves, &undoneMoves);
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
+                }
+            }
+            else if(userChoice==9){
+                if (countDoublyLinked(undoneMoves)==0){
+                    printf("\n No moves to redo. \n");
+                }
+                else{
+                    int moveRedone = redoMove(board, &next_player, &gameMoves, &undoneMoves);
+                    if(moveRedone==0){
+                        printf("\n No moves to redo. \n");
+                    }
+                    else{
+                        tmp_player = next_player;
+                        next_player = previous_player;
+                        previous_player = tmp_player;
+                    }
                 }
             }
             else
@@ -743,7 +798,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
                     break;
                 case 2:
                     //undo the move:
-                    undoMove(board, &next_player, &gameMoves);
+                    undoMove(board, &next_player, &gameMoves, &undoneMoves);
                     tmp_player = next_player;
                     next_player = previous_player;
                     previous_player = tmp_player;
@@ -760,7 +815,7 @@ struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int 
             next_player = previous_player;
             previous_player = tmp_player;
 
-        } 
+        }
 
         displayDoublyLinked(gameMoves); // debug
 

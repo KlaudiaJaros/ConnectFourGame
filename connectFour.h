@@ -20,7 +20,9 @@ int movesLeft(char* board);
 
 int takeTurn(char* board, struct Player **nextPlayer, struct DoublyLinked **moves, int column, int computerTurn);
 
-void undoMove(char* board, struct Player **player , struct DoublyLinked **moves) ;
+void undoMove(char* board, struct Player** player, struct DoublyLinked** moves, struct DoublyLinked** undoneMoves);
+
+int redoMove(char* board, struct Player** player, struct DoublyLinked** moves, struct DoublyLinked** undoneMoves);
 
 struct DoublyLinked* game(struct Player* player_1, struct Player* player_2, int singleplayer);
 
