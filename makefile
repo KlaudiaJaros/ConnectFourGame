@@ -1,8 +1,8 @@
 
 install:
-	cl connectFour.c linkedList.c doublyLinkedList.c
-	cl /c linkedList.c doublyLinkedList.c
-	lib linkedList.obj doublyLinkedList.obj
+	cl connectFour.c linkedList.c doublyLinkedList.c stack.c
+	cl /c linkedList.c doublyLinkedList.c stack.c
+	lib linkedList.obj doublyLinkedList.obj stack.obj
 	link connectFour.obj linkedList.lib 
 
 delete:

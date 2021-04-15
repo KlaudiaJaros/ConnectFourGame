@@ -19,6 +19,10 @@ Play with your Friend
 
 Play against a Computer  
 
+* Undo and redo moves
+
+Both Single Player and Multiplayer game can be played using the assisted mode where the players can undo and redo their moves. Great for beginners!
+
 * View game history
 
 Want to re-watch that match you won? Go to Game History to see a replay of your previous games.
