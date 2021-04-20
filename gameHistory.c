@@ -10,7 +10,7 @@
     struct Player* - a pointer to player 1
     struct Player* - a pointer to player 2
 */
-void appendHistory(struct GameHistory** history, struct Stack* list, struct Player* player_1, struct Player* player_2)
+void appendHistory(struct GameHistory** history, struct Stack* list, struct Player* player_1, struct Player* player_2, int columns, int rows)
 {
     struct GameHistory* temp, * r;
     // if history is null, just add the first element:
@@ -22,6 +22,8 @@ void appendHistory(struct GameHistory** history, struct Stack* list, struct Play
         temp->next = NULL;
         temp->player_1 = player_1;
         temp->player_2 = player_2;
+        temp->rows=rows;
+        temp->columns=columns;
         *history = temp;
     }
     else
@@ -38,6 +40,8 @@ void appendHistory(struct GameHistory** history, struct Stack* list, struct Play
         r->next = NULL;
         r->player_1 = player_1;
         r->player_2 = player_2;
+        r->rows=rows;
+        r->columns=columns;
         temp->next = r;
     }
 }

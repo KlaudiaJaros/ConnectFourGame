@@ -19,9 +19,11 @@ struct GameHistory {
     struct GameHistory* next;
     struct Player* player_1;
     struct Player* player_2;
+    int columns;
+    int rows;
 };
 
-void appendHistory(struct GameHistory** history, struct Stack* list, struct Player* player_1, struct Player* player_2);
+void appendHistory(struct GameHistory** history, struct Stack* list, struct Player* player_1, struct Player* player_2, int columns, int rows);
 
 int countHistory(struct GameHistory* list);
 
