@@ -31,7 +31,7 @@ Size variations include: 7x6 (classic), 5×4, 6×5, 8×7, 9×7, 10×7, 8×8
 
 ### Requirements:
 
-Visual Studio Developer Command Prompt and Windows OS
+Visual Studio Developer Command Prompt and Windows OS. 
 I used: Visual Studio 2019 Developer Command Prompt v16.8.2
 
 ### How to install:
