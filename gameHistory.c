@@ -58,7 +58,7 @@ int countHistory(struct GameHistory* list)
     // while the pointer to the next node is not empty:
     while (list != NULL)
     {
-        // list pointer becomes the next link
+        // list pointer becomes the next link:
         list = list->next;
         // increment the count to count nodes/elements:
         count++;

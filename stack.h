@@ -1,5 +1,5 @@
 #pragma once
-#define MAX 42
+#define MAX 70
 
 /*
     Header file for Stack struct and Stack methods' declarations

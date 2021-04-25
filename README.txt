@@ -1,6 +1,29 @@
  Connect Four Game
  Author: Klaudia Jaros
 
+### Requirements:
+
+Visual Studio Developer Command Prompt and Windows OS
+I used: Visual Studio 2019 Developer Command Prompt v16.8.2
+
+### How to install:
+
+Open your Visual Studio Developer Command Prompt and use the command: `nmake install` to install the application.
+Nmake uses makefile instructions to compile and link the main connectFour.c file with the libraries written by me: stack.c and gameHistory.c 
+
+You are ready to use the application now.
+
+### How to run:
+
+Use the command: `nmake run` or simply type `connectFour.exe`
+
+### How to delete:
+
+Open your Visual Studio Developer Command Prompt and use the command: `nmake delete`
+
+
+
+
 ### Description:
 
 Connect Four is a two-player connection board game, in which the players choose a colour and then take turns dropping coloured discs into a seven-column, 
@@ -30,23 +53,3 @@ Go to Game History to see a replay of your previous games.
 * Change board sizes
 
 Size variations include: 7x6 (classic), 5×4, 6×5, 8×7, 9×7, 10×7, 8×8
-
-### Requirements:
-
-Visual Studio Developer Command Prompt and Windows OS
-I used: Visual Studio 2019 Developer Command Prompt v16.8.2
-
-### How to install:
-
-Open your Visual Studio Developer Command Prompt and use the command: `nmake install` to install the application.
-Nmake uses makefile instructions to compile and link the main connectFour.c file with the libraries written by me: stack.c and gameHistory.c 
-
-You are ready to use the application now.
-
-### How to run:
-
-Use the command: `nmake run` or simply type `connectFour.exe`
-
-### How to delete:
-
-Open your Visual Studio Developer Command Prompt and use the command: `nmake delete`

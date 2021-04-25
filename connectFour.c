@@ -3,7 +3,7 @@
 
   ConnectFour -  a command line game written in C based on the popular Connect Four
   board game. The application allows the user to choose between single player and
-  multiplayer mode and view previous games.
+  multiplayer mode, pick board sizes and view previous games.
 
 */
 
@@ -95,7 +95,7 @@ void replayGame(struct GameHistory* gameHistory) {
     // get the list of moves played in the game:
     struct Stack* gameMoves;
     gameMoves = gameHistory->gameMovesList;
-    int movesCount = gameMoves->top + 1; // top is an index so +1 to get the count
+    int movesCount = gameMoves->top + 1; // top of the stack (top is an index so +1 to get the count)
 
     // get the board size:
     int columns = gameHistory->columns;
@@ -214,9 +214,10 @@ void gameHistory(struct GameHistory** gameHistory) {
 int movesLeft(char* board, int columns, int rows) {
     int size = columns * rows; // board size
     int spaceLeft = 0;
-    
+
     // look for space:
     for (int i = 0; i < size; i++) {
+        // if one empty space is found:
         if (board[i] == ' ') {
             spaceLeft = 1;
             break;
@@ -356,7 +357,7 @@ char checkWin(char* board, int columns, int rows) {
     // reset count:
     xCount = 0;
     oCount = 0;
-    column = columns - 1; // last index in row
+    column = columns - 1; // last index in a row
 
     // 4. check diagonally up from the bottom of columns / :
     for (int bottom = lastRow + 1; bottom < size; bottom++) {
@@ -395,9 +396,9 @@ char checkWin(char* board, int columns, int rows) {
     oCount = 0;
 
     // 5. check diagonally down starting from the top of columns \ :
-
-    for (int column = 0; column < columns; column++) {
-        for (int idx = column; idx < size; idx = idx + (columns + 1)) {
+    int lastIndex = size - 1;
+    for (int column = 1; column < columns; column++) {
+        for (int idx = column; idx <= lastIndex; idx = idx + (columns + 1)) {
             // if empty, continue:
             if (board[idx] == ' ') {
                 xCount = 0;
@@ -421,6 +422,7 @@ char checkWin(char* board, int columns, int rows) {
                 }
             }
         }
+        lastIndex = lastIndex - 8;
         xCount = 0;
         oCount = 0;
     }
@@ -429,8 +431,9 @@ char checkWin(char* board, int columns, int rows) {
     oCount = 0;
 
     // 6. check diagonally down staring from the beginning of the rows:
-
-    for (int row = columns; row < size; row = row + columns) {
+    // start at the beginning of a row:
+    for (int row = 0; row < size; row = row + columns) {
+        // move diagonally down by adding offset:
         for (int idx = row; idx < size; idx = idx + (columns + 1)) {
 
             // if empty, continue:
@@ -471,7 +474,7 @@ char checkWin(char* board, int columns, int rows) {
     struct Player** nextPlayer - player that takes the turn
     struct Stack** moves - list of moves
     int column - the column to where the move is being made
-    int columnSize - column size in the game board 
+    int columnSize - column size in the game board
     int rowSize - row size in the game board
     Returns: 0 if the move is valid and saved, 1 if the move is invalid
 */
@@ -482,7 +485,7 @@ int takeTurn(char* board, struct Player** nextPlayer, struct Stack** moves, int 
     struct Stack* gameMoves = *moves;
     char token = player->token;
     int invalidMove = 0;
-    
+
     // check if the move is valid by checking columns:
     if (column > columnSize || column < 1)
     {
@@ -492,7 +495,7 @@ int takeTurn(char* board, struct Player** nextPlayer, struct Stack** moves, int 
             printf("\n No such column. Please choose a valid column.\n");
         return invalidMove;
     }
-  
+
     int size = columnSize * rowSize; // board size
     int lastRow = size - columnSize; // index of the first element in the last row
     int offset = column - 1; // offset to move to the next element up in the column
@@ -556,8 +559,11 @@ void undoMove(char* board, struct Player** player, struct Stack** moves, struct 
 
             // check if the current player owns the last move:
             if (lastMoveToken == token) {
+                // undo the move on the board:
                 board[movesStack->moves[movesStack->top]] = ' ';
+                // pop the move from the saved moves stack:
                 int move = pop(movesStack);
+                // push it onto the undone moves stack:
                 push(undoneStack, move, token);
             }
             else { // if not, pop the one before:
@@ -571,9 +577,12 @@ void undoMove(char* board, struct Player** player, struct Stack** moves, struct 
         }
     }
     else if (singleplayer) { // if singleplayer:
+    // undo the move on the board:
         board[movesStack->moves[movesStack->top]] = ' ';
+        // pop a move from the saved moves stack:
         int move = pop(movesStack);
 
+        // push the move onto the undone moves stack:
         // player's move:
         if (lastMoveToken == token) {
             push(undoneStack, move, token);
@@ -628,7 +637,7 @@ int redoMove(char* board, struct Player** player, struct Stack** moves, struct S
             return 0;
         }
     }
-    else { // singleplayer or multiplayer case:
+    else { // singleplayer(not a computer) or multiplayer case:
         int undoneMove = -1;
 
         // if the last move doesn't belong to the current player and stack size isn't 1, move to the next element in stack:
@@ -666,8 +675,8 @@ int redoMove(char* board, struct Player** player, struct Stack** moves, struct S
     struct Player *player_1 -  a pointer to Player 1
     struct Player *player_2 -  a pointer to Player 2
     int singleplayer - a flag that indicates if the game is singleplayer or multiplayer
-    int columns - number of columns chosen by the player 
-    int rows - number of rows chosen by the player 
+    int columns - number of columns chosen by the player
+    int rows - number of rows chosen by the player
     Returns:
     struct Stack* - a pointer to a Stack struct that contains all game moves taken during the game time
 */
@@ -801,7 +810,7 @@ struct Stack* game(struct Player* player_1, struct Player* player_2, int singlep
         // if the winner is O:
         else if (win == 'O') {
             gameOver = 1;
-            player_1->winner = 1;
+            player_2->winner = 1;
             printf(" Player %s wins!", player_2->name);
         }
         // if there are no moves left:
@@ -891,6 +900,7 @@ void setUp(struct GameHistory** history, int singleplayer)
     int columns = 7;
     int rows = 6;
 
+    // set the board size based on user's choice:
     switch (boardSize) {
     case 2:
         columns = 5;
