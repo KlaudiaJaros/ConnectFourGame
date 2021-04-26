@@ -14,7 +14,6 @@
 #include <time.h>
 #include "connectFour.h"
 #include "stack.h"
-#include "gameHistory.h"
 
 /*
   initBoard() - initialises the board for the game
@@ -256,16 +255,20 @@ char checkWin(char* board, int columns, int rows) {
                 continue;
             }
             else {
+                // count X:
                 if (board[idx] == 'X') {
                     oCount = 0;
                     xCount++;
+                    // if 4:
                     if (xCount >= 4) {
                         return 'X';
                     }
                 }
+                // count O:
                 if (board[idx] == 'O') {
                     xCount = 0;
                     oCount++;
+                    // if 4:
                     if (oCount >= 4) {
                         return 'O';
                     }
@@ -298,7 +301,7 @@ char checkWin(char* board, int columns, int rows) {
             oCount = 0;
             continue;
         }
-        else {
+        else { // count X and O:
             if (board[idx] == 'X') {
                 oCount = 0;
                 xCount++;
@@ -322,7 +325,7 @@ char checkWin(char* board, int columns, int rows) {
     // 3. check diagonally up from the beginning of the rows / :
     int column = 0;
 
-    // start at each row of the board:
+    // start at the beginning of each row:
     for (int row = 0; row < size; row = row + columns) {
         //check indexes diagonally up from the beginning of the row:
         for (int idx = row; idx >= column; idx = idx - (columns - 1)) {
@@ -357,84 +360,26 @@ char checkWin(char* board, int columns, int rows) {
     // reset count:
     xCount = 0;
     oCount = 0;
-    column = columns - 1; // last index in a row
+    
+
 
     // 4. check diagonally up from the bottom of columns / :
+
+    // for board sizes that are not like 7x6:
+    // calculate last index based on the columns-rows difference:
+    int diff = columns - rows;
+    int lastIndex = -1;
+    if (diff == 1)
+        lastIndex = columns - 1; // last index in the first row
+    else if (diff == 0)
+        lastIndex = 2 * columns - 1; // last index in the second row
+    else if (diff > 1)
+        lastIndex = columns - diff; // index somewhere in the first row
+
+    // start at the last row:
     for (int bottom = lastRow + 1; bottom < size; bottom++) {
         //check indexes diagonally up:
-        for (int idx = bottom; idx >= column; idx = idx - (columns - 1)) {
-
-            // if empty, continue:
-            if (board[idx] == ' ') {
-                xCount = 0;
-                oCount = 0;
-                continue;
-            }
-            else {
-                if (board[idx] == 'X') {
-                    oCount = 0;
-                    xCount++;
-                    if (xCount >= 4) {
-                        return 'X';
-                    }
-                }
-                if (board[idx] == 'O') {
-                    xCount = 0;
-                    oCount++;
-                    if (oCount >= 4) {
-                        return 'O';
-                    }
-                }
-            }
-        }
-        xCount = 0;
-        oCount = 0;
-        column = column + columns;
-    }
-    // reset count:
-    xCount = 0;
-    oCount = 0;
-
-    // 5. check diagonally down starting from the top of columns \ :
-    int lastIndex = size - 1;
-    for (int column = 1; column < columns; column++) {
-        for (int idx = column; idx <= lastIndex; idx = idx + (columns + 1)) {
-            // if empty, continue:
-            if (board[idx] == ' ') {
-                xCount = 0;
-                oCount = 0;
-                continue;
-            }
-            else {
-                if (board[idx] == 'X') {
-                    oCount = 0;
-                    xCount++;
-                    if (xCount >= 4) {
-                        return 'X';
-                    }
-                }
-                if (board[idx] == 'O') {
-                    xCount = 0;
-                    oCount++;
-                    if (oCount >= 4) {
-                        return 'O';
-                    }
-                }
-            }
-        }
-        lastIndex = lastIndex - 8;
-        xCount = 0;
-        oCount = 0;
-    }
-    // reset count:
-    xCount = 0;
-    oCount = 0;
-
-    // 6. check diagonally down staring from the beginning of the rows:
-    // start at the beginning of a row:
-    for (int row = 0; row < size; row = row + columns) {
-        // move diagonally down by adding offset:
-        for (int idx = row; idx < size; idx = idx + (columns + 1)) {
+        for (int idx = bottom; idx >= lastIndex; idx = idx - (columns - 1)) {
 
             // if empty, continue:
             if (board[idx] == ' ') {
@@ -462,6 +407,114 @@ char checkWin(char* board, int columns, int rows) {
         // reset count:
         xCount = 0;
         oCount = 0;
+
+        // if somewhere in the first row, move 1:
+        if (lastIndex < (columns-1)) {
+            lastIndex++;
+        }
+        // if at the end of the row, move to the next row:
+        else {
+            lastIndex = lastIndex + columns;
+        }
+    }
+    // reset count:
+    xCount = 0;
+    oCount = 0;
+
+    // 5. check diagonally down starting from the top of columns \ :
+
+    lastIndex = size - 1;
+    // calculate last index based on the columns-rows difference:
+    if (diff == 0) {
+        lastIndex = lastIndex - columns; // end of the second row from the bottom
+    }
+    else if (diff > 1) {
+        lastIndex = size - diff; // somewhere in the last row
+    }
+    for (int column = 1; column < columns; column++) {
+        for (int idx = column; idx <= lastIndex; idx = idx + (columns + 1)) {
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        // reset the count:
+        xCount = 0;
+        oCount = 0;
+        // if lastIndex somewhere in the last row, move 1:
+        if (lastIndex < (size-1) && lastIndex>(size-1-columns)) {
+            lastIndex++;
+        }
+        // if at the end of a row, move up one row:
+        else {
+            lastIndex = lastIndex - columns;
+        }
+    }
+    // reset count:
+    xCount = 0;
+    oCount = 0;
+
+    // 6. check diagonally down staring from the beginning of the rows:
+    
+    // calculate last index based on the columns-rows difference:
+    lastIndex = size - 2;
+    if (diff == 0) {
+        lastIndex = size - 1;
+    }
+    else if (diff > 1) {
+        lastIndex = size-1-diff;
+    }
+    // start at the beginning of a row:
+    for (int row = 0; row < size; row = row + columns) {
+        // move diagonally down by adding offset:
+        for (int idx = row; idx <= lastIndex; idx = idx + (columns + 1)) {
+
+            // if empty, continue:
+            if (board[idx] == ' ') {
+                xCount = 0;
+                oCount = 0;
+                continue;
+            }
+            else {
+                if (board[idx] == 'X') {
+                    oCount = 0;
+                    xCount++;
+                    if (xCount >= 4) {
+                        return 'X';
+                    }
+                }
+                if (board[idx] == 'O') {
+                    xCount = 0;
+                    oCount++;
+                    if (oCount >= 4) {
+                        return 'O';
+                    }
+                }
+            }
+        }
+        // reset count:
+        xCount = 0;
+        oCount = 0;
+        // move to the next index:
+        lastIndex = lastIndex - 1;
     }
 
     return '-';

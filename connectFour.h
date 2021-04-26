@@ -1,8 +1,43 @@
 #pragma once
 
 /*
-	Header file for ConnectFour methods' declarations
+	Header file for ConnectFour structs and methods' declarations
 */
+
+/*
+    Player struct to store information about the player
+*/
+struct Player {
+    char* name;
+    int winner;
+    char token;
+    int isComputer;
+    int lastMove;
+};
+
+/*
+    GameHistory struct (based on a linked list) to store information about past games
+*/
+struct GameHistory {
+    struct Stack* gameMovesList;
+    struct GameHistory* next;
+    struct Player* player_1;
+    struct Player* player_2;
+    int columns;
+    int rows;
+};
+
+// GameHistory.c methods:
+
+void appendHistory(struct GameHistory** history, struct Stack* list, struct Player* player_1, struct Player* player_2, int columns, int rows);
+
+int countHistory(struct GameHistory* list);
+
+void displayGameHistory(struct GameHistory* list);
+
+struct GameHistory *getElementAt(struct GameHistory *list, int location);
+
+// ConnectFour.c methods:
 
 char* initBoard(int columns, int rows);
 

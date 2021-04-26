@@ -1,4 +1,4 @@
-#include "gameHistory.h"
+#include "connectFour.h"
 #include <stdio.h>
 #include <stdlib.h>
 
